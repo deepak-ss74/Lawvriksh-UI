@@ -52,11 +52,12 @@ The sidebar acts as the primary workspace navigation hub, structured into three 
 ## 3. Matters Interaction Workflow
 
 ### A. Single-Click vs. Double-Click Contract
-- **Single Click (`onClick`) - Floating Dock Activation Without Auto-Chat Switching**:
-  - Activates the floating tools dock for that clicked matter (`setDockMatter(item)`), revealing the matter initials tag (`ZP`, `AP`, `AG`, etc.) and tool counters immediately on the right side.
-  - **Zero Auto-Chat Disruption**: Does **NOT** switch or auto-open any conversation. Whatever chat the user is currently working on (including raw/general non-matter query) remains 100% intact and open on screen.
-  - Un-minimizes the floating tools dock (`setDockMinimized(false)`).
-  - Toggles the sidebar matter sub-chat accordion (`setExpandedMatter`) after a 240ms debounce window so users can see the sub-chats and explicitly choose to open one if desired.
+- **Single Click (`onClick`) - Floating Dock Activation & Contextual Auto-Hide**:
+  - **Expand / Open Matter**: Activates the floating tools dock for that clicked matter (`setDockMatter(item)`), revealing its initials tag (`VB`, `ZP`, etc.) and tools immediately on the chosen dock edge.
+  - **Collapse / Close Matter**: If the user was working in a non-matter general chat (or different matter), collapsing the matter in the sidebar automatically closes/hides the floating tools dock (`setDockMatter(null)`).
+  - **Active Matter Persistence**: If the user is actively working inside that matter (`matter === item`), the dock remains visible even when collapsing the sub-chats accordion in the sidebar.
+  - **Zero Auto-Chat Disruption**: Does **NOT** switch or auto-open any conversation. Whatever chat the user is currently working on remains 100% intact and open on screen.
+  - Toggles the sidebar matter sub-chat accordion (`setExpandedMatter`) after a 240ms debounce window.
 - **Double Click (`onDoubleClick`) - Matter Overview Hub**:
   - Directly deep-links to the **Matter Overview Hub** (`openMatterOverview(item, 'chats')`).
   - Displays the full case analytics, milestones, core documents, and chronology view.

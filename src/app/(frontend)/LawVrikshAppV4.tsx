@@ -798,10 +798,20 @@ export default function App() {
 
   function handleMatterClick(item: string) {
     const isCurrentlyExpanded = expandedMatter === item
-    // Show the floating button for this matter immediately on the right side
-    // WITHOUT automatically opening or switching the active chat!
-    setDockMatter(item)
-    setDockMinimized(false)
+
+    if (isCurrentlyExpanded) {
+      // When user clicks to close/collapse this matter in sidebar:
+      // If we are currently in a non-matter general chat (or a different matter), automatically hide the dock!
+      if (matter === 'No matter — general query' || matter !== item) {
+        setDockMatter(null)
+      }
+    } else {
+      // When user clicks to open/expand this matter:
+      // Show the floating dock for this matter without auto-opening or switching active chat
+      setDockMatter(item)
+      setDockMinimized(false)
+    }
+
     setIconPickerMatter(null)
     setMatterActions('')
 
