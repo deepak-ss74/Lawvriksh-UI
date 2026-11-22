@@ -711,15 +711,35 @@ export default function App() {
   }
 
   function handleMatterClick(item: string) {
+    const isCurrentlyExpanded = expandedMatter === item
+    // Instantly activate this matter so floating tools dock and chat context show immediately
+    setMatter(item)
+    setDockMinimized(false)
+
+    const mostRecentChat = [...chats]
+      .filter((chat) => chat.matter === item)
+      .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)[0]
+
+    setActiveTool('Ask LawVriksh')
+    setChatActions('')
+    setHeaderMenuOpen(false)
+    setIconPickerMatter(null)
+    setMatterActions('')
+
+    if (mostRecentChat) {
+      setActiveChat(mostRecentChat.id)
+      setSubmittedQuery(mostRecentChat.query || mostRecentChat.title)
+    } else {
+      setActiveChat('')
+      setSubmittedQuery('')
+    }
+
     if (matterClickTimerRef.current[item]) {
       clearTimeout(matterClickTimerRef.current[item]!)
       matterClickTimerRef.current[item] = null
     }
     matterClickTimerRef.current[item] = setTimeout(() => {
-      // Single click: ONLY expand or collapse the chats in the sidebar! Does not open or select workspace.
-      setExpandedMatter((current) => (current === item ? '' : item))
-      setIconPickerMatter(null)
-      setMatterActions('')
+      setExpandedMatter(isCurrentlyExpanded ? '' : item)
       matterClickTimerRef.current[item] = null
     }, 240)
   }

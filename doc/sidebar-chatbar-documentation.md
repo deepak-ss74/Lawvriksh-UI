@@ -52,13 +52,15 @@ The sidebar acts as the primary workspace navigation hub, structured into three 
 ## 3. Matters Interaction Workflow
 
 ### A. Single-Click vs. Double-Click Contract
-- **Single Click (`onClick`)**:
-  - Sets the matter as active (`selectedFolder`).
-  - Toggles the expanded sub-chat accordion for that matter.
-  - Filters active workspace views without leaving the chat interface.
-- **Double Click (`onDoubleClick`)**:
-  - Triggers direct deep-linking to the **Matter Overview Hub** (`currentView = 'matter-hub'`).
-  - Opens the full case overview dashboard (Case mapping, Chronology, Documents, Milestones).
+- **Single Click (`onClick`) - Instant Matter & Floating Dock Activation**:
+  - Immediately activates the matter (`setMatter(item)`), switching out of non-matter or general query mode.
+  - Instantly reveals the right-hand **Floating Tools Dock** (`.floating-tools-dock-container`) with matter initials tag, document counters, and smart tools without requiring a message to be sent first.
+  - Un-minimizes the floating tools dock (`setDockMinimized(false)`).
+  - Automatically loads the most recent conversation of that matter into the central chat workspace.
+  - Smoothly toggles the sidebar sub-chat list accordion (`setExpandedMatter`) after a 240ms debounce window.
+- **Double Click (`onDoubleClick`) - Matter Overview Hub**:
+  - Directly deep-links to the **Matter Overview Hub** (`openMatterOverview(item, 'chats')`).
+  - Displays the full case analytics, milestones, core documents, and chronology view.
 
 ### B. Action Icons Behavior
 - **Main Matter Row**:
@@ -163,6 +165,54 @@ To maintain a clean aesthetic matching modern AI assistants without truncated do
 | Matter Chat Actions | `.matter-chat-row-actions` | `width: 32px`, three-dot only, absolute right |
 | Title Wrapper | `.title-scroll-container` | `overflow: hidden`, `flex: 1 1 auto` |
 | Text Scroll | `.is-overflowing` | Smooth 5.5s marquee alternate animation on row hover |
+
+---
+
+## 7. Dynamic "Files" Header Badge & Context-Aware Drawer
+
+A clean, three-scope drawer architecture providing fluid document grounding into conversations.
+
+### A. Dynamic Header Badge Contract
+- **Home / New Conversation (`!activeChat`)**:
+  - Badge renders **`Files 0`** (`.files-button b.is-zero`) in muted neutral styling when no documents have been attached.
+- **Active / Attached State**:
+  - Dynamically increments to **`Files 1`**, **`Files 2`**, etc. (`.files-button b.has-files`) when files are attached via composer, file upload dialog, or drag-and-drop.
+- **Matter Conversation State**:
+  - Renders the exact count of files attached to that specific conversation (`currentChat.files.length`), rather than the entire matter's archive.
+
+### B. Context-Aware 3-Scope File Drawer
+The drawer opens on the right (`.file-drawer`) with three top segmented navigation tabs (`.library-scope-tabs`):
+
+1. **Tab 1: In this chat (`in-chat`)**:
+   - Shows documents actively attached to the current conversation.
+   - **Empty State**: Minimal dashed container (`.drawer-empty-chat-files`) notifying that 0 files are currently attached, featuring two quick action buttons:
+     - `+ Upload file`: Opens native system file dialog.
+     - `📂 Browse Matrix`: Switches directly to the matter matrix view.
+   - Attached files display removable chips (`✕ Remove`) to unground them anytime.
+2. **Tab 2: All files (`all`)**:
+   - Displays all documents across the firm/portfolio.
+   - Initial lazy-capped display (12 items) with a smooth "Load more documents" button to eliminate freezing or long scroll lag.
+   - Real-time search filter by title or matter name.
+   - "+ Attach" toggle button immediately adds/removes the document from the conversation.
+3. **Tab 3: By Matrix (`matrix`)**:
+   - Visual folder matrix cards (`.matrix-cards-list`) categorized by matter.
+   - Each card displays folder icon, matter title, and file count pill (`N files`).
+   - Clicking a card navigates into that matter's dedicated file repository with breadcrumb header and back button (`← All matrices`).
+   - Documents within the matrix can be dragged directly or attached with 1 click.
+
+### C. Drag & Drop Interaction
+- Any document card across all three drawer views is natively draggable (`draggable={true}`).
+- Dragging over the AI composer triggers the active hover target (`.composer-drop-highlight`).
+- Dropping immediately grounds the conversation in that document and attaches it to `currentChatFiles`.
+
+### D. Z-Index Stacking Context & Floating Dock Hierarchy
+- **Issue Prevented**: The fixed right-hand floating matter tools dock (`.floating-tools-dock-container`, `z-index: 99`) was overlapping on top of the opened file drawer (`.file-drawer`, previously `z-index: 40`).
+- **Stacking Resolution**:
+  - `.drawer-scrim`: Elevated to `z-index: 140 !important;`
+  - `.file-drawer`: Elevated to `z-index: 150 !important;`
+  - `.floating-tools-dock-container.drawer-is-open`: When `drawerOpen` is active, docked tools drop to `z-index: 30 !important;`, `opacity: 0.12`, and `pointer-events: none;`, guaranteeing that the floating island remains completely underneath the drawer without visual or click interference.
+
+
 
 ---
 
