@@ -1853,7 +1853,7 @@ export default function App() {
       </main>
 
       {matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && (
-        <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''}`}>
+        <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''} ${drawerOpen ? 'drawer-is-open' : ''}`}>
           <button
             className="dock-collapse-trigger"
             onClick={() => setDockMinimized(!dockMinimized)}

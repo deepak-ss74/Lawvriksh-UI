@@ -203,3 +203,11 @@ The drawer opens on the right (`.file-drawer`) with three top segmented navigati
 - Dragging over the AI composer triggers the active hover target (`.composer-drop-highlight`).
 - Dropping immediately grounds the conversation in that document and attaches it to `currentChatFiles`.
 
+### D. Z-Index Stacking Context & Floating Dock Hierarchy
+- **Issue Prevented**: The fixed right-hand floating matter tools dock (`.floating-tools-dock-container`, `z-index: 99`) was overlapping on top of the opened file drawer (`.file-drawer`, previously `z-index: 40`).
+- **Stacking Resolution**:
+  - `.drawer-scrim`: Elevated to `z-index: 140 !important;`
+  - `.file-drawer`: Elevated to `z-index: 150 !important;`
+  - `.floating-tools-dock-container.drawer-is-open`: When `drawerOpen` is active, docked tools drop to `z-index: 30 !important;`, `opacity: 0.12`, and `pointer-events: none;`, guaranteeing that the floating island remains completely underneath the drawer without visual or click interference.
+
+
