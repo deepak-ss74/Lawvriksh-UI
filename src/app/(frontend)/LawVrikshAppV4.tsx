@@ -1470,26 +1470,29 @@ export default function App() {
                     <div className="matter-chat-list">
                       {displayedMatterChats.map((chat) => (
                         <div className={`matter-chat-row ${activeChat === chat.id ? 'selected' : ''}`} key={chat.id}>
-                          <button className="matter-chat-main" onClick={() => selectChat(chat)}>
+                          <button className="matter-chat-main" onClick={() => selectChat(chat)} type="button">
                             <Icon name="chat" size={14} />
                             <div className="title-scroll-container">
-                              <span className={`recent-chat-title ${chat.title.length > 18 ? 'is-overflowing' : ''}`}>{chat.title}</span>
+                              <span className={`matter-chat-title ${chat.title.length > 16 ? 'is-overflowing' : ''}`}>{chat.title}</span>
                             </div>
-                            <small>{chat.matter} · {chat.time}</small>
+                            {chat.pinned && <b title="Pinned">•</b>}
                           </button>
-                          <div className="recent-chat-row-actions">
+                          <div className="matter-chat-row-actions">
                             <button
                               aria-label={`Options for ${chat.title}`}
                               className="row-more"
-                              onClick={() => setChatActions(chatActions === `recent-${chat.id}` ? '' : `recent-${chat.id}`)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setChatActions(chatActions === chat.id ? '' : chat.id)
+                              }}
                               title={`Options for ${chat.title}`}
                               type="button"
                             >
                               <Icon name="more-vertical" size={13} />
                             </button>
                           </div>
-                          {chatActions === `recent-${chat.id}` && (
-                            <div className="chat-context-menu recent-menu">
+                          {chatActions === chat.id && (
+                            <div className="chat-context-menu">
                               <button onClick={() => renameChat(chat)}><Icon name="note" size={15} /> Rename</button>
                               <button onClick={() => { setChats((current) => current.map((item) => item.id === chat.id ? { ...item, pinned: !item.pinned, time: 'Now', updatedAt: Date.now() } : item)); setChatActions('') }}>
                                 <Icon name="spark" size={15} /> {chat.pinned ? 'Unpin' : 'Pin'}
@@ -1499,7 +1502,6 @@ export default function App() {
                                 <Icon name="close" size={15} /> Archive
                               </button>
                             </div>
-                            
                           )}
                         </div>
                       ))}
