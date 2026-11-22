@@ -403,7 +403,7 @@ export default function App() {
     () => documents.filter((document) => document.matter === matter).length,
     [matter],
   )
-  const activeFloatingMatter = dockMatter || (matter !== 'No matter — general query' ? matter : null)
+  const activeFloatingMatter = dockMatter || (matter !== 'No matter — general query' ? matter : (activeTool === 'All Matters' ? (matters[0] || 'Asterix Precision Castings') : null))
 
   const floatingMatterInitials = useMemo(
     () =>
@@ -1821,7 +1821,7 @@ export default function App() {
       </aside>
 
       <main className="main-panel">
-        <section className={`workspace ${Boolean(activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && !dockMinimized) ? `has-dock-gutter has-dock-gutter-${dockPosition}` : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
+        <section className={`workspace ${Boolean(activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && !dockMinimized) ? `has-dock-gutter has-dock-gutter-${dockPosition}` : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
           {activeTool === 'All Matters' ? (
             <div className="all-matters-workspace">
               <div className="all-matters-header">
@@ -3205,7 +3205,7 @@ export default function App() {
       </main>
 
       {
-                      activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
+                      activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && (
                         <>
                           {isDraggingDock && (
                             <div className="dock-snap-indicators-layer">
