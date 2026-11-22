@@ -9285,3 +9285,356 @@
   background: #ebe4d8;
   color: #2d2820;
 }
+
+/* =========================================================
+   Movable / Relocatable Floating Matter Tools Dock
+   Supports: Right (Middle), Left (Middle), Bottom (Middle), Top (Middle)
+   ========================================================= */
+
+.floating-tools-dock-container {
+  position: fixed;
+  z-index: 99;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease, top 260ms cubic-bezier(0.16, 1, 0.3, 1), left 260ms cubic-bezier(0.16, 1, 0.3, 1), right 260ms cubic-bezier(0.16, 1, 0.3, 1), bottom 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Position: Right (Middle) */
+.floating-tools-dock-container.pos-right {
+  right: 18px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: translateY(-50%) !important;
+}
+.floating-tools-dock-container.pos-right.is-minimized {
+  transform: translateY(-50%) translateX(calc(100% - 10px)) !important;
+}
+
+/* Position: Left (Middle) */
+.floating-tools-dock-container.pos-left {
+  left: calc(var(--dock-sidebar-offset, 280px) + 16px) !important;
+  top: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: translateY(-50%) !important;
+}
+.floating-tools-dock-container.pos-left.is-minimized {
+  transform: translateY(-50%) translateX(calc(-100% + 10px)) !important;
+}
+
+/* Position: Bottom (Middle) */
+.floating-tools-dock-container.pos-bottom {
+  bottom: 18px !important;
+  left: calc(50% + (var(--dock-sidebar-offset, 280px) / 2)) !important;
+  right: auto !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+}
+.floating-tools-dock-container.pos-bottom.is-minimized {
+  transform: translateX(-50%) translateY(calc(100% - 10px)) !important;
+}
+
+/* Position: Top (Upper Middle) */
+.floating-tools-dock-container.pos-top {
+  top: 76px !important;
+  left: calc(50% + (var(--dock-sidebar-offset, 280px) / 2)) !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+}
+.floating-tools-dock-container.pos-top.is-minimized {
+  transform: translateX(-50%) translateY(calc(-100% + 10px)) !important;
+}
+
+/* Horizontal Island for Bottom and Top */
+.floating-tools-dock-container.pos-bottom .floating-tools-island,
+.floating-tools-dock-container.pos-top .floating-tools-island {
+  flex-direction: row !important;
+  border-radius: 9999px !important;
+  padding: 6px 12px !important;
+  gap: 7px !important;
+}
+
+.floating-tools-dock-container.pos-bottom .floating-dock-divider,
+.floating-tools-dock-container.pos-top .floating-dock-divider {
+  height: 22px !important;
+  margin: 0 3px !important;
+  width: 1px !important;
+}
+
+.floating-tools-dock-container.pos-bottom .floating-matter-tag,
+.floating-tools-dock-container.pos-top .floating-matter-tag {
+  margin-bottom: 0 !important;
+  margin-right: 2px !important;
+}
+
+/* Flyouts per position */
+.floating-tools-dock-container.pos-right .floating-dock-flyout {
+  right: 56px !important;
+  left: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+}
+.floating-tools-dock-container.pos-left .floating-dock-flyout {
+  left: 56px !important;
+  right: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+}
+.floating-tools-dock-container.pos-bottom .floating-dock-flyout {
+  bottom: 58px !important;
+  top: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+.floating-tools-dock-container.pos-top .floating-dock-flyout {
+  top: 58px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Collapse trigger placement */
+.floating-tools-dock-container.pos-right .dock-collapse-trigger {
+  left: -11px !important;
+  top: 14px !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+.floating-tools-dock-container.pos-left .dock-collapse-trigger {
+  right: -11px !important;
+  top: 14px !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+.floating-tools-dock-container.pos-bottom .dock-collapse-trigger {
+  top: -11px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+.floating-tools-dock-container.pos-top .dock-collapse-trigger {
+  bottom: -11px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  top: auto !important;
+}
+
+/* Workspace Gutters per Position */
+.workspace.has-dock-gutter-right {
+  padding-right: 76px !important;
+  transition: padding-right 220ms ease;
+}
+.workspace.has-dock-gutter-left {
+  padding-left: 76px !important;
+  transition: padding-left 220ms ease;
+}
+.workspace.has-dock-gutter-bottom {
+  padding-bottom: 76px !important;
+  transition: padding-bottom 220ms ease;
+}
+.workspace.has-dock-gutter-top {
+  padding-top: 56px !important;
+  transition: padding-top 220ms ease;
+}
+
+/* Drag Grip Handle */
+.dock-drag-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: #8c8577;
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: none;
+}
+.dock-drag-grip:hover {
+  background: #ede8df;
+  color: #38332b;
+}
+.dock-drag-grip:active,
+.is-dragging-free .dock-drag-grip {
+  cursor: grabbing !important;
+  color: #a64927;
+}
+
+/* Position Switcher Wrap & Flyout */
+.dock-pos-switcher-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.dock-pos-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #8c8577;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  width: 22px;
+  transition: all 0.15s ease;
+}
+.dock-pos-toggle-btn:hover,
+.dock-pos-toggle-btn.active {
+  background: #ede8df;
+  color: #a64927;
+}
+
+.dock-pos-flyout {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #ddd7cb;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(35, 30, 24, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 10px;
+  z-index: 120;
+  width: 148px;
+  animation: fadeIn 0.15s ease;
+}
+.floating-tools-dock-container.pos-right .dock-pos-flyout {
+  right: 32px;
+  top: 0;
+}
+.floating-tools-dock-container.pos-left .dock-pos-flyout {
+  left: 32px;
+  top: 0;
+}
+.floating-tools-dock-container.pos-bottom .dock-pos-flyout {
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.floating-tools-dock-container.pos-top .dock-pos-flyout {
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dock-pos-flyout-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8c8375;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.dock-pos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dock-pos-grid button {
+  background: #f7f4ee;
+  border: 1px solid #e5dfd4;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4b453c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+}
+.dock-pos-grid button:hover {
+  background: #eee8dc;
+  border-color: #d1c8b9;
+  color: #1a1917;
+}
+.dock-pos-grid button.selected {
+  background: #a64927;
+  border-color: #a64927;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dock-pos-mid-row {
+  display: flex;
+  gap: 4px;
+}
+.dock-pos-mid-row button {
+  flex: 1;
+}
+
+/* Active Drag State */
+.floating-tools-dock-container.is-dragging-free {
+  transition: none !important;
+  z-index: 1000 !important;
+  cursor: grabbing !important;
+}
+.floating-tools-dock-container.is-dragging-free .floating-tools-island {
+  box-shadow: 0 24px 60px rgba(35, 30, 24, 0.25), 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+  border-color: #a64927 !important;
+  transform: scale(1.04);
+}
+
+/* Snap Guide Overlays */
+.dock-snap-indicators-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+}
+.dock-snap-indicator {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(166, 73, 39, 0.04);
+  border: 2px dashed rgba(166, 73, 39, 0.25);
+  color: rgba(166, 73, 39, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.16s ease;
+}
+.dock-snap-indicator.is-active {
+  background: rgba(166, 73, 39, 0.12);
+  border-color: #a64927;
+  border-style: solid;
+  color: #a64927;
+  box-shadow: 0 0 20px rgba(166, 73, 39, 0.2);
+}
+.dock-snap-indicator.right {
+  top: 20%;
+  bottom: 20%;
+  right: 12px;
+  width: 70px;
+}
+.dock-snap-indicator.left {
+  top: 20%;
+  bottom: 20%;
+  left: 12px;
+  width: 70px;
+}
+.dock-snap-indicator.bottom {
+  left: 20%;
+  right: 20%;
+  bottom: 12px;
+  height: 56px;
+}
+.dock-snap-indicator.top {
+  left: 20%;
+  right: 20%;
+  top: 68px;
+  height: 56px;
+}
+

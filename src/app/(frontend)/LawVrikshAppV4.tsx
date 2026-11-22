@@ -15,6 +15,7 @@ type IconName =
   | 'file'
   | 'folder'
   | 'globe'
+  | 'grip'
   | 'home'
   | 'library'
   | 'lock'
@@ -23,6 +24,7 @@ type IconName =
   | 'mic'
   | 'more'
   | 'more-vertical'
+  | 'move'
   | 'note'
   | 'paperclip'
   | 'pin'
@@ -55,6 +57,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     file: <><path d="M6 2h8l4 4v16H6z" /><path d="M14 2v5h5M9 13h6M9 17h6" /></>,
     folder: <path d="M3 7h7l2 2h9v10H3z" />,
     globe: <><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>,
+    grip: <><circle cx="8" cy="6" r="1.5" fill="currentColor" stroke="none" /><circle cx="16" cy="6" r="1.5" fill="currentColor" stroke="none" /><circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none" /><circle cx="16" cy="12" r="1.5" fill="currentColor" stroke="none" /><circle cx="8" cy="18" r="1.5" fill="currentColor" stroke="none" /><circle cx="16" cy="18" r="1.5" fill="currentColor" stroke="none" /></>,
     home: <><path d="m3 11 9-8 9 8" /><path d="M5 10v11h14V10M9 21v-7h6v7" /></>,
     library: <><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3-1 3 15-3 1z" /></>,
     lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
@@ -63,6 +66,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     mic: <><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" /></>,
     more: <><circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none" /></>,
     'more-vertical': <><circle cx="12" cy="5" r="1.8" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none" /><circle cx="12" cy="19" r="1.8" fill="currentColor" stroke="none" /></>,
+    move: <><path d="m5 9-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20" /></>,
     note: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 3v3M15 3v3M8 10h8M8 14h6" /></>,
     paperclip: <path d="m20 12-8.5 8.5a5 5 0 0 1-7-7L14 4a3 3 0 0 1 4 4l-9 9a1 1 0 0 1-2-2l8-8" />,
     pin: <><path d="m9 4 6 6" /><path d="m14 3 7 7-3 1-4 4-1 4-8-8 4-1 4-4z" /><path d="m8 16-5 5" /></>,
@@ -210,6 +214,66 @@ export default function App() {
   const [floatingDiscoveryOpen, setFloatingDiscoveryOpen] = useState(false)
   const [dockMinimized, setDockMinimized] = useState(false)
   const [dockMatter, setDockMatter] = useState<string | null>(null)
+  const [dockPosition, setDockPosition] = useState<'right' | 'bottom' | 'left' | 'top'>('right')
+  const [isDraggingDock, setIsDraggingDock] = useState(false)
+  const [dockDragPos, setDockDragPos] = useState<{ x: number; y: number } | null>(null)
+  const [snapTarget, setSnapTarget] = useState<'right' | 'bottom' | 'left' | 'top' | null>(null)
+  const [positionMenuOpen, setPositionMenuOpen] = useState(false)
+
+  const handleDockPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingDock(true)
+    setDockDragPos({ x: e.clientX, y: e.clientY })
+
+    const onPointerMove = (ev: PointerEvent) => {
+      setDockDragPos({ x: ev.clientX, y: ev.clientY })
+      const winW = window.innerWidth
+      const winH = window.innerHeight
+      const x = ev.clientX
+      const y = ev.clientY
+
+      if (y > winH - 130) {
+        setSnapTarget('bottom')
+      } else if (y < 130) {
+        setSnapTarget('top')
+      } else if (x < (sidebarCollapsed ? 180 : sidebarWidth + 140)) {
+        setSnapTarget('left')
+      } else {
+        setSnapTarget('right')
+      }
+    }
+
+    const onPointerUp = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      setIsDraggingDock(false)
+      setDockDragPos(null)
+
+      const winW = window.innerWidth
+      const winH = window.innerHeight
+      const x = ev.clientX
+      const y = ev.clientY
+
+      let target: 'right' | 'bottom' | 'left' | 'top' = 'right'
+      if (y > winH - 130) {
+        target = 'bottom'
+      } else if (y < 130) {
+        target = 'top'
+      } else if (x < (sidebarCollapsed ? 180 : sidebarWidth + 140)) {
+        target = 'left'
+      } else {
+        target = 'right'
+      }
+
+      setDockPosition(target)
+      setSnapTarget(null)
+    }
+
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+  }
   const [showTour, setShowTour] = useState(false)
   const [tourStep, setTourStep] = useState(1)
   const [sidebarWidth, setSidebarWidth] = useState(280)
@@ -1747,7 +1811,7 @@ export default function App() {
       </aside>
 
       <main className="main-panel">
-        <section className={`workspace ${Boolean(activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && !dockMinimized) ? 'has-dock-gutter' : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
+        <section className={`workspace ${Boolean(activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && !dockMinimized) ? `has-dock-gutter has-dock-gutter-${dockPosition}` : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
           {activeTool === 'All Matters' ? (
             <div className="all-matters-workspace">
               <div className="all-matters-header">
@@ -3132,118 +3196,187 @@ export default function App() {
 
       {
                       activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
-                        <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''} ${drawerOpen ? 'drawer-is-open' : ''}`}>
-                          <button
-                            className="dock-collapse-trigger"
-                            onClick={() => setDockMinimized(!dockMinimized)}
-                            title={dockMinimized ? 'Expand tools dock' : 'Minimize tools dock'}
-                            type="button"
-                          >
-                            <Icon name={dockMinimized ? 'arrow' : 'close'} size={11} />
-                          </button>
-
-                          <div className="floating-tools-island">
-                            <div className="floating-matter-tag" title={activeFloatingMatter}>
-                              <span>{floatingMatterInitials}</span>
+                        <>
+                          {isDraggingDock && (
+                            <div className="dock-snap-indicators-layer">
+                              <div className={`dock-snap-indicator right ${snapTarget === 'right' ? 'is-active' : ''}`}><span>Right Dock</span></div>
+                              <div className={`dock-snap-indicator bottom ${snapTarget === 'bottom' ? 'is-active' : ''}`}><span>Bottom Dock</span></div>
+                              <div className={`dock-snap-indicator left ${snapTarget === 'left' ? 'is-active' : ''}`}><span>Left Dock</span></div>
+                              <div className={`dock-snap-indicator top ${snapTarget === 'top' ? 'is-active' : ''}`}><span>Top Dock</span></div>
                             </div>
+                          )}
 
+                          <aside
+                            aria-label="Quick matter tools dock"
+                            className={`floating-tools-dock-container pos-${dockPosition} ${dockMinimized ? 'is-minimized' : ''} ${drawerOpen ? 'drawer-is-open' : ''} ${isDraggingDock ? 'is-dragging-free' : ''}`}
+                            style={
+                              isDraggingDock && dockDragPos
+                                ? ({
+                                    left: `${dockDragPos.x}px`,
+                                    top: `${dockDragPos.y}px`,
+                                    right: 'auto',
+                                    bottom: 'auto',
+                                    transform: 'translate(-50%, -50%)',
+                                    '--dock-sidebar-offset': sidebarCollapsed ? '0px' : `${sidebarWidth}px`,
+                                  } as React.CSSProperties)
+                                : ({
+                                    '--dock-sidebar-offset': sidebarCollapsed ? '0px' : `${sidebarWidth}px`,
+                                  } as React.CSSProperties)
+                            }
+                          >
                             <button
-                              className={`floating-dock-btn ${activeTool === 'Overview' ? 'active' : ''}`}
-                              data-label="Overview"
-                              onClick={() => openMatterOverview(activeFloatingMatter)}
-                              title="Matter Overview"
+                              className="dock-collapse-trigger"
+                              onClick={() => setDockMinimized(!dockMinimized)}
+                              title={dockMinimized ? 'Expand tools dock' : 'Minimize tools dock'}
                               type="button"
                             >
-                              <Icon name="spark" size={17} />
+                              <Icon name={dockMinimized ? 'arrow' : 'close'} size={11} />
                             </button>
 
-                            <button
-                              className={`floating-dock-btn ${activeTool === 'Documents' ? 'active' : ''}`}
-                              data-label="Documents"
-                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[1]) }}
-                              title={`Documents (${floatingMatterDocumentCount})`}
-                              type="button"
-                            >
-                              <Icon name="folder" size={17} />
-                              <span className="floating-badge">{floatingMatterDocumentCount}</span>
-                            </button>
-
-                            <button
-                              className={`floating-dock-btn ${activeTool === 'Case mapping' ? 'active' : ''}`}
-                              data-label="Case mapping"
-                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[2]) }}
-                              title="Case mapping"
-                              type="button"
-                            >
-                              <Icon name="map" size={17} />
-                            </button>
-
-                            <button
-                              className={`floating-dock-btn ${activeTool === 'Chronology' ? 'active' : ''}`}
-                              data-label="Chronology"
-                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[3]) }}
-                              title="Chronology"
-                              type="button"
-                            >
-                              <Icon name="clock" size={17} />
-                            </button>
-
-                            <button
-                              className={`floating-dock-btn ${activeTool === 'Tabular review' ? 'active' : ''}`}
-                              data-label="Tabular review"
-                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[4]) }}
-                              title="Tabular review"
-                              type="button"
-                            >
-                              <Icon name="table" size={17} />
-                            </button>
-
-                            <button
-                              className={`floating-dock-btn ${activeTool === 'Notes' ? 'active' : ''}`}
-                              data-label="Notes"
-                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[6]) }}
-                              title="Matter notes"
-                              type="button"
-                            >
-                              <Icon name="note" size={17} />
-                            </button>
-
-                            <div className="floating-dock-divider" />
-
-                            <button
-                              className={`floating-dock-btn more-btn ${floatingDockExpanded ? 'active' : ''}`}
-                              data-label="More actions"
-                              onClick={() => setFloatingDockExpanded(!floatingDockExpanded)}
-                              title="More matter tools"
-                              type="button"
-                            >
-                              <Icon name="more" size={17} />
-                            </button>
-
-                            {floatingDockExpanded && (
-                              <div className="floating-dock-flyout">
-                                <div className="flyout-header">
-                                  <strong>More Matter Tools</strong>
-                                  <button onClick={() => setFloatingDockExpanded(false)} aria-label="Close flyout"><Icon name="close" size={14} /></button>
-                                </div>
-                                <div className="flyout-list">
-                                  <button onClick={() => { openTool(matterTools[7]); setFloatingDockExpanded(false) }}>
-                                    <Icon name="spark" size={16} />
-                                    <span>Hearing prep</span>
-                                  </button>
-                                  <button onClick={() => { openTool(matterTools[5]); setFloatingDockExpanded(false) }}>
-                                    <Icon name="file" size={16} />
-                                    <span>Drafts</span>
-                                  </button>
-                                  <button onClick={() => { openTool(matterTools[0]); setFloatingDockExpanded(false) }}>
-                                    <Icon name="briefcase" size={16} />
-                                    <span>Matter Overview</span>
-                                  </button>
-                                </div>
+                            <div className="floating-tools-island">
+                              <div
+                                className="dock-drag-grip"
+                                onPointerDown={handleDockPointerDown}
+                                title="Hold & drag to move dock (Right, Left, Bottom, or Top)"
+                              >
+                                <Icon name="grip" size={14} />
                               </div>
-                            )}
-                          </div>
-                        </aside>
+
+                              <div className="dock-pos-switcher-wrap">
+                                <button
+                                  aria-label="Change dock position"
+                                  className={`dock-pos-toggle-btn ${positionMenuOpen ? 'active' : ''}`}
+                                  onClick={() => setPositionMenuOpen(!positionMenuOpen)}
+                                  title={`Current: ${dockPosition.toUpperCase()}. Click to switch side.`}
+                                  type="button"
+                                >
+                                  <Icon name="move" size={13} />
+                                </button>
+                                {positionMenuOpen && (
+                                  <div className="dock-pos-flyout" onClick={(e) => e.stopPropagation()}>
+                                    <div className="dock-pos-flyout-title">Dock Position</div>
+                                    <div className="dock-pos-grid">
+                                      <button className={dockPosition === 'top' ? 'selected' : ''} onClick={() => { setDockPosition('top'); setPositionMenuOpen(false) }}>
+                                        <span>↑</span> Top
+                                      </button>
+                                      <div className="dock-pos-mid-row">
+                                        <button className={dockPosition === 'left' ? 'selected' : ''} onClick={() => { setDockPosition('left'); setPositionMenuOpen(false) }}>
+                                          <span>←</span> Left
+                                        </button>
+                                        <button className={dockPosition === 'right' ? 'selected' : ''} onClick={() => { setDockPosition('right'); setPositionMenuOpen(false) }}>
+                                          Right <span>→</span>
+                                        </button>
+                                      </div>
+                                      <button className={dockPosition === 'bottom' ? 'selected' : ''} onClick={() => { setDockPosition('bottom'); setPositionMenuOpen(false) }}>
+                                        <span>↓</span> Bottom
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="floating-matter-tag" title={activeFloatingMatter}>
+                                <span>{floatingMatterInitials}</span>
+                              </div>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Overview' ? 'active' : ''}`}
+                                data-label="Overview"
+                                onClick={() => openMatterOverview(activeFloatingMatter)}
+                                title="Matter Overview"
+                                type="button"
+                              >
+                                <Icon name="spark" size={17} />
+                              </button>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Documents' ? 'active' : ''}`}
+                                data-label="Documents"
+                                onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[1]) }}
+                                title={`Documents (${floatingMatterDocumentCount})`}
+                                type="button"
+                              >
+                                <Icon name="folder" size={17} />
+                                <span className="floating-badge">{floatingMatterDocumentCount}</span>
+                              </button>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Case mapping' ? 'active' : ''}`}
+                                data-label="Case mapping"
+                                onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[2]) }}
+                                title="Case mapping"
+                                type="button"
+                              >
+                                <Icon name="map" size={17} />
+                              </button>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Chronology' ? 'active' : ''}`}
+                                data-label="Chronology"
+                                onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[3]) }}
+                                title="Chronology"
+                                type="button"
+                              >
+                                <Icon name="clock" size={17} />
+                              </button>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Tabular review' ? 'active' : ''}`}
+                                data-label="Tabular review"
+                                onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[4]) }}
+                                title="Tabular review"
+                                type="button"
+                              >
+                                <Icon name="table" size={17} />
+                              </button>
+
+                              <button
+                                className={`floating-dock-btn ${activeTool === 'Notes' ? 'active' : ''}`}
+                                data-label="Notes"
+                                onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[6]) }}
+                                title="Matter notes"
+                                type="button"
+                              >
+                                <Icon name="note" size={17} />
+                              </button>
+
+                              <div className="floating-dock-divider" />
+
+                              <button
+                                className={`floating-dock-btn more-btn ${floatingDockExpanded ? 'active' : ''}`}
+                                data-label="More actions"
+                                onClick={() => setFloatingDockExpanded(!floatingDockExpanded)}
+                                title="More matter tools"
+                                type="button"
+                              >
+                                <Icon name="more" size={17} />
+                              </button>
+
+                              {floatingDockExpanded && (
+                                <div className="floating-dock-flyout">
+                                  <div className="flyout-header">
+                                    <strong>More Matter Tools</strong>
+                                    <button onClick={() => setFloatingDockExpanded(false)} aria-label="Close flyout"><Icon name="close" size={14} /></button>
+                                  </div>
+                                  <div className="flyout-list">
+                                    <button onClick={() => { openTool(matterTools[7]); setFloatingDockExpanded(false) }}>
+                                      <Icon name="spark" size={16} />
+                                      <span>Hearing prep</span>
+                                    </button>
+                                    <button onClick={() => { openTool(matterTools[5]); setFloatingDockExpanded(false) }}>
+                                      <Icon name="file" size={16} />
+                                      <span>Drafts</span>
+                                    </button>
+                                    <button onClick={() => { openTool(matterTools[0]); setFloatingDockExpanded(false) }}>
+                                      <Icon name="briefcase" size={16} />
+                                      <span>Matter Overview</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </aside>
+                        </>
                       )
                     }
 

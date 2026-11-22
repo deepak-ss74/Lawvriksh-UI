@@ -211,52 +211,43 @@ The drawer opens on the right (`.file-drawer`) with three top segmented navigati
   - `.file-drawer`: Elevated to `z-index: 150 !important;`
   - `.floating-tools-dock-container.drawer-is-open`: When `drawerOpen` is active, docked tools drop to `z-index: 30 !important;`, `opacity: 0.12`, and `pointer-events: none;`, guaranteeing that the floating island remains completely underneath the drawer without visual or click interference.
 
-
-
 ---
 
-## 7. Dynamic "Files" Header Badge & Context-Aware Drawer
+## 8. Movable & 4-Edge Dockable Floating Tools Architecture
 
-A clean, three-scope drawer architecture providing fluid document grounding into conversations.
+The floating matter tools dock can be freely repositioned or snapped to any edge of the workspace based on user preference.
 
-### A. Dynamic Header Badge Contract
-- **Home / New Conversation (`!activeChat`)**:
-  - Badge renders **`Files 0`** (`.files-button b.is-zero`) in muted neutral styling when no documents have been attached.
-- **Active / Attached State**:
-  - Dynamically increments to **`Files 1`**, **`Files 2`**, etc. (`.files-button b.has-files`) when files are attached via composer, file upload dialog, or drag-and-drop.
-- **Matter Conversation State**:
-  - Renders the exact count of files attached to that specific conversation (`currentChat.files.length`), rather than the entire matter's archive.
+### A. Supported Positions & Dynamic Orientation
+1. **Right (`pos-right` - Default)**:
+   - Centered vertically on the right edge (`top: 50%; right: 18px; transform: translateY(-50%)`).
+   - Vertical column island (`flex-direction: column`).
+   - Workspace gutter: `padding-right: 76px`.
+2. **Left (`pos-left`)**:
+   - Centered vertically along the left workspace boundary (`top: 50%; left: calc(var(--sidebar-w) + 16px); transform: translateY(-50%)`).
+   - Vertical column island (`flex-direction: column`).
+   - Workspace gutter: `padding-left: 76px`.
+3. **Bottom (`pos-bottom`)**:
+   - Centered horizontally along the screen bottom (`bottom: 18px; left: 50%; transform: translateX(-50%)`).
+   - Horizontal pill island (`flex-direction: row; border-radius: 9999px`).
+   - Flyout opens upward.
+   - Workspace gutter: `padding-bottom: 76px`.
+4. **Top (`pos-top`)**:
+   - Centered horizontally directly beneath the main app header (`top: 76px; left: 50%; transform: translateX(-50%)`).
+   - Horizontal pill island (`flex-direction: row; border-radius: 9999px`).
+   - Flyout opens downward.
+   - Workspace gutter: `padding-top: 56px`.
 
-### B. Context-Aware 3-Scope File Drawer
-The drawer opens on the right (`.file-drawer`) with three top segmented navigation tabs (`.library-scope-tabs`):
+### B. Interactive Drag-and-Snap Mechanics
+- **6-Dot Drag Grip (`.dock-drag-grip`)**:
+  - Located on the dock island with `cursor: grab`.
+  - Pressing and moving activates real-time pointer tracking with elevated drop-shadow (`is-dragging-free`).
+- **Edge Snap Overlay (`.dock-snap-indicators-layer`)**:
+  - Dragging near any of the 4 screen boundaries dynamically highlights that edge (`.dock-snap-indicator.is-active`).
+  - Releasing pointer smoothly snaps the dock to that edge with clean spring transitions.
 
-1. **Tab 1: In this chat (`in-chat`)**:
-   - Shows documents actively attached to the current conversation.
-   - **Empty State**: Minimal dashed container (`.drawer-empty-chat-files`) notifying that 0 files are currently attached, featuring two quick action buttons:
-     - `+ Upload file`: Opens native system file dialog.
-     - `📂 Browse Matrix`: Switches directly to the matter matrix view.
-   - Attached files display removable chips (`✕ Remove`) to unground them anytime.
-2. **Tab 2: All files (`all`)**:
-   - Displays all documents across the firm/portfolio.
-   - Initial lazy-capped display (12 items) with a smooth "Load more documents" button to eliminate freezing or long scroll lag.
-   - Real-time search filter by title or matter name.
-   - "+ Attach" toggle button immediately adds/removes the document from the conversation.
-3. **Tab 3: By Matrix (`matrix`)**:
-   - Visual folder matrix cards (`.matrix-cards-list`) categorized by matter.
-   - Each card displays folder icon, matter title, and file count pill (`N files`).
-   - Clicking a card navigates into that matter's dedicated file repository with breadcrumb header and back button (`← All matrices`).
-   - Documents within the matrix can be dragged directly or attached with 1 click.
+### C. 1-Click Position Switcher Popup (`.dock-pos-switcher-wrap`)
+- Quick move button (`Icon name="move"`) opens a directional pad (`Top`, `Left`, `Right`, `Bottom`).
+- Clicking any option instantly relocates the dock without dragging.
 
-### C. Drag & Drop Interaction
-- Any document card across all three drawer views is natively draggable (`draggable={true}`).
-- Dragging over the AI composer triggers the active hover target (`.composer-drop-highlight`).
-- Dropping immediately grounds the conversation in that document and attaches it to `currentChatFiles`.
-
-### D. Z-Index Stacking Context & Floating Dock Hierarchy
-- **Issue Prevented**: The fixed right-hand floating matter tools dock (`.floating-tools-dock-container`, `z-index: 99`) was overlapping on top of the opened file drawer (`.file-drawer`, previously `z-index: 40`).
-- **Stacking Resolution**:
-  - `.drawer-scrim`: Elevated to `z-index: 140 !important;`
-  - `.file-drawer`: Elevated to `z-index: 150 !important;`
-  - `.floating-tools-dock-container.drawer-is-open`: When `drawerOpen` is active, docked tools drop to `z-index: 30 !important;`, `opacity: 0.12`, and `pointer-events: none;`, guaranteeing that the floating island remains completely underneath the drawer without visual or click interference.
 
 
