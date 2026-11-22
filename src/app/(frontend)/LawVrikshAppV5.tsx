@@ -179,14 +179,14 @@ export default function App() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [matterMoreOpen, setMatterMoreOpen] = useState(false)
   const [pendingMatterTool, setPendingMatterTool] = useState('')
-  const [activeTool, setActiveTool] = useState('Ask LawVriksh')
+  const [activeTool, setActiveTool] = useState<string>('Ask LawVriksh')
   const [query, setQuery] = useState('')
   const [attachedFile, setAttachedFile] = useState('')
   const [isComposerDragActive, setIsComposerDragActive] = useState(false)
   const [activeChat, setActiveChat] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [matters, setMatters] = useState<string[]>([]) // Empty on first arrival
-  const [chats, setChats] = useState<ChatHistoryItem[]>([]) // Empty on first arrival
+  const [chats, setChats] = useState<MatterChat[]>([]) // Empty on first arrival
   const [expandedMatter, setExpandedMatter] = useState('')
   const [matterActions, setMatterActions] = useState('')
   const [chatActions, setChatActions] = useState('')
@@ -1195,7 +1195,7 @@ export default function App() {
       </aside>
 
       <main className="main-panel">
-        <section className={`workspace ${isHomeWorkspace && matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && !dockMinimized ? 'has-dock-gutter' : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''}`}>
+        <section className={`workspace ${isHomeWorkspace && matter !== 'No matter — general query' && !dockMinimized ? 'has-dock-gutter' : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''}`}>
           {isNotesWorkspace ? (
             <div className="notes-workspace">
               <div className="notes-toolbar">
@@ -1852,7 +1852,7 @@ export default function App() {
         </section>
       </main>
 
-      {isHomeWorkspace && matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && (
+      {matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && (
         <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''}`}>
           <button
             className="dock-collapse-trigger"

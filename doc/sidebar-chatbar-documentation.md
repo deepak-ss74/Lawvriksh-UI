@@ -89,26 +89,6 @@ The sidebar acts as the primary workspace navigation hub, structured into three 
   - When a matter has more than 10 chats (`matterChats.length > 10`), a sleek minimal `.matter-chat-view-all-btn` appears at the bottom of the sub-chat list.
   - Clicking this button immediately opens the **Matter Overview Hub** (`openMatterOverview(item, 'chats')`), presenting all conversations with full history and search.
 
-### C. Recents Ordering & Stability Contract (View vs. Mutation)
-- **Clicking / Opening a Chat (`selectChat`)**:
-  - Strictly switches the active conversation view and context.
-  - Does **not** mutate `updatedAt` or timestamp.
-  - **No unexpected jumping**: Opening a chat to read it leaves its position in the Recents list completely unchanged.
-- **Top-of-List Promotion Triggers**:
-  - A chat is promoted to the top (#1 position) in Recents **only** when mutated by user action:
-    1. A new message is sent in the conversation (`submitQuery`).
-    2. The conversation is edited or renamed (`renameChat`).
-    3. The conversation is reassigned or moved (`moveChat`).
-
-### D. Matter Chats 10-Item Cap & "View all" Hub Link
-- **Sidebar Display Cap**:
-  - A maximum of the **top 10 most recent conversations** are rendered directly inside an expanded matter.
-  - Pinned chats are given top priority, followed by recency (`updatedAt`).
-  - Prevents tall, unwieldy sidebar scrolling when a matter has 15, 20+ chats.
-- **"View all (N) chats" Link**:
-  - When a matter has more than 10 chats (`matterChats.length > 10`), a sleek minimal `.matter-chat-view-all-btn` appears at the bottom of the sub-chat list.
-  - Clicking this button immediately opens the **Matter Overview Hub** (`openMatterOverview(item, 'chats')`), presenting all conversations with full history and search.
-
 ---
 
 ## 4. Title Presentation & Marquee Scroll (ChatGPT Style)
@@ -183,3 +163,43 @@ To maintain a clean aesthetic matching modern AI assistants without truncated do
 | Matter Chat Actions | `.matter-chat-row-actions` | `width: 32px`, three-dot only, absolute right |
 | Title Wrapper | `.title-scroll-container` | `overflow: hidden`, `flex: 1 1 auto` |
 | Text Scroll | `.is-overflowing` | Smooth 5.5s marquee alternate animation on row hover |
+
+---
+
+## 7. Dynamic "Files" Header Badge & Context-Aware Drawer
+
+A clean, three-scope drawer architecture providing fluid document grounding into conversations.
+
+### A. Dynamic Header Badge Contract
+- **Home / New Conversation (`!activeChat`)**:
+  - Badge renders **`Files 0`** (`.files-button b.is-zero`) in muted neutral styling when no documents have been attached.
+- **Active / Attached State**:
+  - Dynamically increments to **`Files 1`**, **`Files 2`**, etc. (`.files-button b.has-files`) when files are attached via composer, file upload dialog, or drag-and-drop.
+- **Matter Conversation State**:
+  - Renders the exact count of files attached to that specific conversation (`currentChat.files.length`), rather than the entire matter's archive.
+
+### B. Context-Aware 3-Scope File Drawer
+The drawer opens on the right (`.file-drawer`) with three top segmented navigation tabs (`.library-scope-tabs`):
+
+1. **Tab 1: In this chat (`in-chat`)**:
+   - Shows documents actively attached to the current conversation.
+   - **Empty State**: Minimal dashed container (`.drawer-empty-chat-files`) notifying that 0 files are currently attached, featuring two quick action buttons:
+     - `+ Upload file`: Opens native system file dialog.
+     - `📂 Browse Matrix`: Switches directly to the matter matrix view.
+   - Attached files display removable chips (`✕ Remove`) to unground them anytime.
+2. **Tab 2: All files (`all`)**:
+   - Displays all documents across the firm/portfolio.
+   - Initial lazy-capped display (12 items) with a smooth "Load more documents" button to eliminate freezing or long scroll lag.
+   - Real-time search filter by title or matter name.
+   - "+ Attach" toggle button immediately adds/removes the document from the conversation.
+3. **Tab 3: By Matrix (`matrix`)**:
+   - Visual folder matrix cards (`.matrix-cards-list`) categorized by matter.
+   - Each card displays folder icon, matter title, and file count pill (`N files`).
+   - Clicking a card navigates into that matter's dedicated file repository with breadcrumb header and back button (`← All matrices`).
+   - Documents within the matrix can be dragged directly or attached with 1 click.
+
+### C. Drag & Drop Interaction
+- Any document card across all three drawer views is natively draggable (`draggable={true}`).
+- Dragging over the AI composer triggers the active hover target (`.composer-drop-highlight`).
+- Dropping immediately grounds the conversation in that document and attaches it to `currentChatFiles`.
+

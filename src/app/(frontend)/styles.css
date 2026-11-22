@@ -8822,3 +8822,457 @@
   background: #ede7dc;
   color: #1a1714;
 }
+
+/* Dynamic File Drawer Styles (V4) */
+.files-button b.is-zero {
+  background: #ede8df !important;
+  color: #9c958a !important;
+  font-weight: 500 !important;
+}
+
+.files-button b.has-files {
+  background: #a64927 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.file-drawer {
+  background: #faf8f3 !important;
+  border-left: 1px solid #ddd7cd !important;
+  box-shadow: -20px 0 60px rgba(36, 31, 24, 0.12) !important;
+  width: min(430px, 92vw) !important;
+  padding: 24px 20px !important;
+}
+
+.library-scope-tabs {
+  display: flex !important;
+  gap: 6px !important;
+  margin: 16px 0 14px !important;
+  border-bottom: 1px solid #e8e3d8 !important;
+  padding-bottom: 12px !important;
+  overflow-x: auto !important;
+}
+
+.library-scope-tabs button {
+  background: transparent !important;
+  border: 1px solid #dad4c8 !important;
+  border-radius: 9px !important;
+  color: #6b6459 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+}
+
+.library-scope-tabs button:hover {
+  background: #ede8df !important;
+  color: #2b2721 !important;
+}
+
+.library-scope-tabs button.active {
+  background: #2b2721 !important;
+  border-color: #2b2721 !important;
+  color: #ffffff !important;
+}
+
+/* Empty State for In This Chat */
+.drawer-empty-chat-files {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 38px 20px 32px;
+  background: #f4efe6;
+  border: 1px dashed #d8d0c2;
+  border-radius: 14px;
+  margin: 12px 0 16px;
+}
+
+.empty-chat-files-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eae3d5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c8273;
+  margin-bottom: 14px;
+}
+
+.drawer-empty-chat-files h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2e2a24;
+  margin: 0 0 6px;
+}
+
+.drawer-empty-chat-files p {
+  font-size: 12px;
+  color: #7b7468;
+  line-height: 1.45;
+  margin: 0 0 18px;
+  max-width: 280px;
+}
+
+.empty-chat-files-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-drawer-upload-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #a64927;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-drawer-upload-primary:hover {
+  background: #8e3c1e;
+}
+
+.btn-drawer-switch-matrix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #4b453d;
+  border: 1px solid #dcd4c7;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-drawer-switch-matrix:hover {
+  background: #f0ebe0;
+  border-color: #cfc5b5;
+}
+
+/* Drawer Toolbar Search */
+.drawer-toolbar {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 14px;
+}
+
+.drawer-toolbar label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #ded9d0;
+  border-radius: 9px;
+  padding: 0 11px;
+  height: 34px;
+}
+
+.drawer-toolbar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: #2e2a24;
+  outline: none;
+}
+
+.drawer-toolbar input::placeholder {
+  color: #a0988b;
+}
+
+.drawer-toolbar .btn-upload-file {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #2d2b26;
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.drawer-toolbar .btn-upload-file:hover {
+  background: #1a1815;
+}
+
+/* File List Scroll Container */
+.file-list-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 2px;
+}
+
+.file-list-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.file-list-scroll::-webkit-scrollbar-thumb {
+  background: #d8d2c5;
+  border-radius: 4px;
+}
+
+/* File Item Card */
+.file-drawer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fffefa;
+  border: 1px solid #ebe5da;
+  border-radius: 10px;
+  padding: 9px 11px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.file-drawer-card:hover {
+  background: #ffffff;
+  border-color: #d8d0c2;
+  box-shadow: 0 2px 6px rgba(35, 30, 24, 0.04);
+}
+
+.file-drawer-card[draggable='true'] {
+  cursor: grab;
+}
+
+.file-drawer-card[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.file-drawer-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-drawer-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #332f28;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-drawer-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #8c8477;
+}
+
+.file-drawer-meta-badge {
+  background: #f0ece2;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #6a6256;
+}
+
+.file-drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-file-attach-chip {
+  background: #f3efe6;
+  border: 1px solid #e0d8cc;
+  color: #554d42;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-file-attach-chip:hover {
+  background: #a64927;
+  border-color: #a64927;
+  color: #ffffff;
+}
+
+.btn-file-attach-chip.is-attached {
+  background: #e6ede4;
+  border-color: #c9dac4;
+  color: #2e6628;
+}
+
+.btn-file-remove-chip {
+  background: transparent;
+  border: none;
+  color: #9c9588;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-file-remove-chip:hover {
+  background: #fbeae5;
+  color: #c0392b;
+}
+
+/* Matrix Cards List */
+.matrix-cards-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-right: 2px;
+}
+
+.matrix-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fffefa;
+  border: 1px solid #ebe4d8;
+  border-radius: 11px;
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: left;
+}
+
+.matrix-card:hover {
+  background: #ffffff;
+  border-color: #d5ccbd;
+  box-shadow: 0 2px 8px rgba(35, 30, 24, 0.05);
+  transform: translateY(-1px);
+}
+
+.matrix-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f2eee6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a64927;
+  flex-shrink: 0;
+}
+
+.matrix-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matrix-card-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #2b261f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrix-card-subtitle {
+  font-size: 11px;
+  color: #8c8375;
+}
+
+.matrix-card-count {
+  font-size: 11px;
+  background: #f2ede4;
+  color: #6e6557;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Matrix Breadcrumb Bar */
+.matrix-breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: #f3efe7;
+  border: 1px solid #e5dfd2;
+  border-radius: 9px;
+}
+
+.btn-matrix-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #a64927;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.btn-matrix-back:hover {
+  text-decoration: underline;
+}
+
+.matrix-breadcrumb-sep {
+  color: #b5ada0;
+  font-size: 11px;
+}
+
+.matrix-breadcrumb-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3b352d;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Load more button in All Files */
+.btn-drawer-load-more {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 8px;
+  background: #f3efe6;
+  border: 1px dashed #d5ccbe;
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: #635a4d;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-drawer-load-more:hover {
+  background: #ebe4d8;
+  color: #2d2820;
+}

@@ -108,6 +108,7 @@ export type MatterChat = {
   responseHeading?: string
   responseParagraphs?: string[]
   sources?: string[]
+  files?: string[]
 }
 
 export type SavedNote = {
@@ -160,7 +161,12 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [fileScope, setFileScope] = useState<'matter' | 'global'>('matter')
+  const [fileScope, setFileScope] = useState<'in-chat' | 'all' | 'matrix' | 'matter' | 'global'>('in-chat')
+  const [drawerSearch, setDrawerSearch] = useState('')
+  const [selectedMatrixMatter, setSelectedMatrixMatter] = useState<string | null>(null)
+  const [allFilesLimit, setAllFilesLimit] = useState(12)
+  const [newChatFiles, setNewChatFiles] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [matterMenuOpen, setMatterMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [matterMoreOpen, setMatterMoreOpen] = useState(false)
@@ -374,9 +380,100 @@ export default function App() {
     )
   }, [matter])
 
+  const currentChat = useMemo(() => chats.find((c) => c.id === activeChat), [chats, activeChat])
+
+  const currentChatFiles: string[] = useMemo(() => {
+    if (!activeChat) {
+      return newChatFiles
+    }
+    return currentChat?.files || []
+  }, [activeChat, currentChat, newChatFiles])
+
+  function attachFileToChat(fileName: string) {
+    setAttachedFile(fileName)
+    if (!activeChat) {
+      setNewChatFiles((prev) => (prev.includes(fileName) ? prev : [...prev, fileName]))
+    } else {
+      setChats((current) =>
+        current.map((c) =>
+          c.id === activeChat
+            ? { ...c, files: (c.files || []).includes(fileName) ? c.files : [...(c.files || []), fileName], updatedAt: Date.now() }
+            : c,
+        ),
+      )
+    }
+  }
+
+  function removeFileFromChat(fileName: string) {
+    if (attachedFile === fileName) {
+      setAttachedFile('')
+    }
+    if (!activeChat) {
+      setNewChatFiles((prev) => prev.filter((f) => f !== fileName))
+    } else {
+      setChats((current) =>
+        current.map((c) =>
+          c.id === activeChat
+            ? { ...c, files: (c.files || []).filter((f) => f !== fileName), updatedAt: Date.now() }
+            : c,
+        ),
+      )
+    }
+  }
+
+  function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const name = file.name
+    const sizeKB = Math.round(file.size / 1024)
+    const sizeStr = sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`
+    const ext = name.split('.').pop()?.toLowerCase() || ''
+    const tone = ext === 'xlsx' || ext === 'csv' ? 'blue' : ext === 'docx' || ext === 'doc' ? 'orange' : 'green'
+
+    const newDoc: AppDocument = {
+      name,
+      detail: `${sizeStr} · Just now`,
+      tone,
+      matter: matter === 'No matter — general query' ? 'General Legal Workspace' : matter,
+      category: 'chat-attachment',
+      size: sizeStr,
+      inChronology: false,
+    }
+
+    setDocuments((curr) => [newDoc, ...curr])
+    attachFileToChat(name)
+    event.target.value = ''
+  }
+
+  function triggerQuickUploadPrompt() {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    } else {
+      const fileName = window.prompt('Enter file name to upload/create (e.g. Settlement Agreement.pdf):')
+      if (fileName?.trim()) {
+        const clean = fileName.trim().includes('.') ? fileName.trim() : `${fileName.trim()}.pdf`
+        const newDoc: AppDocument = {
+          name: clean,
+          detail: '1.2 MB · Just now',
+          tone: 'green',
+          matter: matter === 'No matter — general query' ? 'General Legal Workspace' : matter,
+          category: 'chat-attachment',
+          size: '1.2 MB',
+          inChronology: false,
+        }
+        setDocuments((curr) => [newDoc, ...curr])
+        attachFileToChat(clean)
+      }
+    }
+  }
+
   function submitQueryWithMessage(msg: string) {
     setSubmittedQuery(msg)
     const id = `chat-${Date.now()}`
+    const finalChatFiles = [...newChatFiles]
+    if (attachedFile && !finalChatFiles.includes(attachedFile)) {
+      finalChatFiles.push(attachedFile)
+    }
     const newChat: MatterChat = {
       id,
       title: msg.slice(0, 42),
@@ -388,9 +485,11 @@ export default function App() {
       thinkingLabel: matter === 'No matter — general query' ? 'General Legal Analysis' : 'Matter Investigation',
       responseParagraphs: generateDynamicResponse(msg, matter),
       sources: [`${matter} Master Agreement.pdf`],
+      files: finalChatFiles,
     }
     setChats((current) => [newChat, ...current])
     setActiveChat(id)
+    setNewChatFiles([])
     setActiveTool('Ask LawVriksh')
   }
   const availableMatterFolders = useMemo(() => {
@@ -438,8 +537,6 @@ export default function App() {
     matterTools[7], // Hearing prep
   ]
   const moreToolsActive = ['Overview', 'Tabular review', 'Drafts', 'Notes', 'Hearing prep'].includes(activeTool)
-
-  const currentChat = useMemo(() => chats.find((c) => c.id === activeChat), [chats, activeChat])
 
   function generateDynamicResponse(queryText: string, matterName: string, fileName?: string): string[] {
     const isGeneral = matterName === 'No matter — general query'
@@ -518,6 +615,10 @@ export default function App() {
     setSubmittedQuery('')
     setQuery('')
     setAttachedFile('')
+    setNewChatFiles([])
+    setDrawerSearch('')
+    setSelectedMatrixMatter(null)
+    setFileScope('in-chat')
     setMatter('No matter — general query')
     setMatterMenuOpen(false)
     setHeaderMenuOpen(false)
@@ -682,7 +783,7 @@ export default function App() {
     setSidebarOpen(false)
   }
 
-  function openLibrary(scope: 'matter' | 'global') {
+  function openLibrary(scope: 'matter' | 'global' | 'in-chat' | 'all' | 'matrix') {
     setFileScope(scope)
     setActiveTool(scope === 'global' ? 'Global library' : 'Documents')
     setDrawerOpen(false)
@@ -1004,17 +1105,18 @@ export default function App() {
 
         <div className="app-header-actions">
           <button
-            aria-label={matter === 'No matter — general query' ? 'View all files' : `View files for ${matter}`}
+            aria-label={`Files in current conversation (${currentChatFiles.length})`}
             className="files-button"
             onClick={() => {
-              setFileScope(matter === 'No matter — general query' ? 'global' : 'matter')
+              setFileScope('in-chat')
               setDrawerOpen(true)
             }}
-            title={matter === 'No matter — general query' ? `View all ${documents.length} files` : `View ${matterDocumentCount} files in ${matter}`}
+            title={activeChat ? `${currentChatFiles.length} files used in this conversation` : 'New conversation: 0 files in this chat'}
+            type="button"
           >
             <Icon name="folder" size={17} />
             <span>Files</span>
-            <b>{matter === 'No matter — general query' ? documents.length : matterDocumentCount}</b>
+            <b className={currentChatFiles.length === 0 ? 'is-zero' : 'has-files'}>{currentChatFiles.length}</b>
           </button>
         </div>
       </header>
@@ -2935,7 +3037,7 @@ export default function App() {
                     event.dataTransfer.getData('application/x-lawvriksh-document') ||
                     event.dataTransfer.files[0]?.name
                   if (fileName) {
-                    setAttachedFile(fileName)
+                    attachFileToChat(fileName)
                     setDocuments((current) => {
                       if (current.some((d) => d.name === fileName)) return current
                       return [
@@ -2943,7 +3045,7 @@ export default function App() {
                           name: fileName,
                           detail: 'Uploaded in chat',
                           tone: 'blue',
-                          matter: matter,
+                          matter: matter === 'No matter — general query' ? 'General Legal Workspace' : matter,
                           category: 'chat-attachment',
                           size: '1.2 MB',
                           inChronology: false,
@@ -3119,97 +3221,424 @@ export default function App() {
                     }
 
                     { drawerOpen && <button aria-label="Close files" className="drawer-scrim" onClick={() => setDrawerOpen(false)} /> }
+                    {(() => {
+                      const activeFileScope = fileScope === 'matter' ? 'matrix' : fileScope === 'global' ? 'all' : fileScope
+                      return (
                     <aside aria-hidden={!drawerOpen} className={`file-drawer ${drawerOpen ? 'is-open' : ''}`}>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={handleFileUpload}
+                      />
                       <div className="drawer-header">
                         <div>
-                          <p className="eyebrow">{fileScope === 'global' ? 'Across every matter' : 'Matter context'}</p>
-                          <h2>{fileScope === 'global' ? 'Global library' : 'Matter files'}</h2>
+                          <p className="eyebrow">
+                            {activeFileScope === 'in-chat'
+                              ? (activeChat ? 'Conversation Files' : 'New Conversation')
+                              : activeFileScope === 'all'
+                              ? 'Portfolio Library'
+                              : selectedMatrixMatter
+                              ? `Matrix · ${selectedMatrixMatter}`
+                              : 'Matter Matrices'}
+                          </p>
+                          <h2>
+                            {activeFileScope === 'in-chat'
+                              ? 'In this chat'
+                              : activeFileScope === 'all'
+                              ? 'All files'
+                              : selectedMatrixMatter
+                              ? selectedMatrixMatter
+                              : 'Folder Matrix'}
+                          </h2>
                         </div>
-                        <button aria-label="Close files" className="icon-button" onClick={() => setDrawerOpen(false)}><Icon name="close" /></button>
-                      </div>
-                      <div className="library-scope-tabs">
-                        <button className={fileScope === 'matter' ? 'active' : ''} onClick={() => setFileScope('matter')}>This matter</button>
-                        <button className={fileScope === 'global' ? 'active' : ''} onClick={() => setFileScope('global')}>All files</button>
+                        <button aria-label="Close files" className="icon-button" onClick={() => setDrawerOpen(false)} type="button">
+                          <Icon name="close" size={16} />
+                        </button>
                       </div>
 
-                      {fileScope === 'matter' && (
-                        <div className="drawer-scope-tabs">
-                          <button
-                            className={`drawer-scope-tab ${drawerDocTab === 'case-record' ? 'active' : ''}`}
-                            onClick={() => setDrawerDocTab('case-record')}
-                            type="button"
-                          >
-                            Case Records ({documents.filter((d) => d.matter === matter && d.category === 'case-record').length})
-                          </button>
-                          <button
-                            className={`drawer-scope-tab ${drawerDocTab === 'chat-attachment' ? 'active' : ''}`}
-                            onClick={() => setDrawerDocTab('chat-attachment')}
-                            type="button"
-                          >
-                            Chat Files ({documents.filter((d) => d.matter === matter && d.category === 'chat-attachment').length})
-                          </button>
-                        </div>
+                      <div className="library-scope-tabs">
+                        <button
+                          className={activeFileScope === 'in-chat' ? 'active' : ''}
+                          onClick={() => { setFileScope('in-chat'); setSelectedMatrixMatter(null) }}
+                          type="button"
+                        >
+                          In this chat ({currentChatFiles.length})
+                        </button>
+                        <button
+                          className={activeFileScope === 'all' ? 'active' : ''}
+                          onClick={() => { setFileScope('all'); setSelectedMatrixMatter(null) }}
+                          type="button"
+                        >
+                          All files ({documents.length})
+                        </button>
+                        <button
+                          className={activeFileScope === 'matrix' ? 'active' : ''}
+                          onClick={() => setFileScope('matrix')}
+                          type="button"
+                        >
+                          By Matrix ({availableMatterFolders.length})
+                        </button>
+                      </div>
+
+                      {/* TAB 1: IN THIS CHAT */}
+                      {activeFileScope === 'in-chat' && (
+                        <>
+                          {currentChatFiles.length === 0 ? (
+                            <div className="drawer-empty-chat-files">
+                              <div className="empty-chat-files-badge">
+                                <Icon name="folder" size={24} />
+                              </div>
+                              <h3>0 files in this chat</h3>
+                              <p>Upload a document, attach from Matrix, or create legal drafts in this chat to see them here.</p>
+                              <div className="empty-chat-files-actions">
+                                <button className="btn-drawer-upload-primary" onClick={triggerQuickUploadPrompt} type="button">
+                                  <Icon name="plus" size={15} />
+                                  <span>Upload file</span>
+                                </button>
+                                <button className="btn-drawer-switch-matrix" onClick={() => setFileScope('matrix')} type="button">
+                                  <Icon name="table" size={14} />
+                                  <span>Browse Matrix</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="drawer-toolbar">
+                                <label>
+                                  <Icon name="search" size={16} />
+                                  <input
+                                    placeholder="Search chat files"
+                                    value={drawerSearch}
+                                    onChange={(e) => setDrawerSearch(e.target.value)}
+                                  />
+                                  {drawerSearch && (
+                                    <button
+                                      aria-label="Clear search"
+                                      onClick={() => setDrawerSearch('')}
+                                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                      type="button"
+                                    >
+                                      <Icon name="close" size={13} />
+                                    </button>
+                                  )}
+                                </label>
+                                <button className="btn-upload-file" onClick={triggerQuickUploadPrompt} type="button">
+                                  <Icon name="plus" size={15} /> Upload
+                                </button>
+                              </div>
+
+                              <div className="file-list-scroll">
+                                {documents
+                                  .filter((doc) => currentChatFiles.includes(doc.name))
+                                  .filter((doc) => doc.name.toLowerCase().includes(drawerSearch.toLowerCase()))
+                                  .map((document) => (
+                                    <div
+                                      className="file-drawer-card"
+                                      draggable
+                                      key={document.name}
+                                      onDragEnd={() => setIsComposerDragActive(false)}
+                                      onDragStart={(event) => {
+                                        event.dataTransfer.effectAllowed = 'copy'
+                                        event.dataTransfer.setData('text/plain', `Review document "${document.name}"`)
+                                        event.dataTransfer.setData('application/x-lawvriksh-document', document.name)
+                                        window.setTimeout(() => {
+                                          setDrawerOpen(false)
+                                          setIsComposerDragActive(true)
+                                        }, 80)
+                                      }}
+                                      title="Drag this document into the AI composer"
+                                    >
+                                      <span className={`file-icon ${document.tone}`}><Icon name="file" size={17} /></span>
+                                      <div className="file-drawer-info">
+                                        <span className="file-drawer-title">{document.name}</span>
+                                        <div className="file-drawer-meta">
+                                          <span>{document.size || '1.4 MB'}</span>
+                                          <span className="file-drawer-meta-badge">In this chat</span>
+                                        </div>
+                                      </div>
+                                      <div className="file-drawer-actions">
+                                        <button
+                                          className="btn-file-attach-chip is-attached"
+                                          onClick={() => {
+                                            setAttachedFile(document.name)
+                                            setDrawerOpen(false)
+                                          }}
+                                          title="Set as active prompt context"
+                                          type="button"
+                                        >
+                                          {attachedFile === document.name ? 'Active' : 'Attach'}
+                                        </button>
+                                        <button
+                                          aria-label={`Remove ${document.name} from chat`}
+                                          className="btn-file-remove-chip"
+                                          onClick={() => removeFileFromChat(document.name)}
+                                          title="Remove from chat"
+                                          type="button"
+                                        >
+                                          <Icon name="close" size={13} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </>
+                          )}
+                        </>
                       )}
-                      {fileScope === 'matter' && <div className="drawer-matter">
-                        <span className="matter-avatar">{matterInitials}</span>
-                        <div>
-                          <strong>{matter}</strong>
-                          <small>{documents.filter((document) => document.matter === matter).length} documents connected</small>
-                        </div>
-                      </div>}
-                      <div className="drawer-toolbar">
-                        <label>
-                          <Icon name="search" size={17} />
-                          <input placeholder="Search files" />
-                        </label>
-                        <button><Icon name="plus" size={17} /> Upload</button>
-                      </div>
-                      <div className="file-list">
-                        {documents
-                          .filter((document) => {
-                            if (fileScope === 'global') return true
-                            if (document.matter !== matter) return false
-                            return document.category === drawerDocTab
-                          })
-                          .map((document) => (
-                            <button
-                              draggable
-                              key={document.name}
-                              onDragEnd={() => setIsComposerDragActive(false)}
-                              onDragStart={(event) => {
-                                event.dataTransfer.effectAllowed = 'copy'
-                                event.dataTransfer.setData(
-                                  'text/plain',
-                                  `Review the document “${document.name}” from this matter`,
-                                )
-                                event.dataTransfer.setData(
-                                  'application/x-lawvriksh-document',
-                                  document.name,
-                                )
-                                window.setTimeout(() => {
-                                  setDrawerOpen(false)
-                                  setIsComposerDragActive(true)
-                                }, 80)
-                              }}
-                              title="Drag this document into the AI composer"
-                            >
-                              <span className={`file-icon ${document.tone}`}><Icon name="file" size={18} /></span>
-                              <span>
-                                <strong>{document.name}</strong>
-                                <small>{document.detail}{fileScope === 'global' ? ` · ${document.matter}` : ''}</small>
-                              </span>
-                              <Icon name="chevron" size={15} />
+
+                      {/* TAB 2: ALL FILES */}
+                      {activeFileScope === 'all' && (
+                        <>
+                          <div className="drawer-toolbar">
+                            <label>
+                              <Icon name="search" size={16} />
+                              <input
+                                placeholder="Search all portfolio files"
+                                value={drawerSearch}
+                                onChange={(e) => setDrawerSearch(e.target.value)}
+                              />
+                              {drawerSearch && (
+                                <button
+                                  aria-label="Clear search"
+                                  onClick={() => setDrawerSearch('')}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                  type="button"
+                                >
+                                  <Icon name="close" size={13} />
+                                </button>
+                              )}
+                            </label>
+                            <button className="btn-upload-file" onClick={triggerQuickUploadPrompt} type="button">
+                              <Icon name="plus" size={15} /> Upload
                             </button>
-                          ))}
-                      </div>
-                      <button className="view-all-button">
-                        {fileScope === 'global' ? 'All uploaded and generated files' : 'Open full matter library'} <Icon name="arrow" size={16} />
-                      </button>
+                          </div>
+
+                          <div
+                            className="file-list-scroll"
+                            onScroll={(e) => {
+                              const target = e.currentTarget
+                              if (target.scrollTop + target.clientHeight >= target.scrollHeight - 40) {
+                                setAllFilesLimit((curr) => curr + 12)
+                              }
+                            }}
+                          >
+                            {(() => {
+                              const filtered = documents.filter((doc) =>
+                                doc.name.toLowerCase().includes(drawerSearch.toLowerCase()) ||
+                                doc.matter.toLowerCase().includes(drawerSearch.toLowerCase())
+                              )
+                              const visible = filtered.slice(0, allFilesLimit)
+                              return (
+                                <>
+                                  {visible.map((document) => {
+                                    const isAttached = currentChatFiles.includes(document.name)
+                                    return (
+                                      <div
+                                        className="file-drawer-card"
+                                        draggable
+                                        key={document.name}
+                                        onDragEnd={() => setIsComposerDragActive(false)}
+                                        onDragStart={(event) => {
+                                          event.dataTransfer.effectAllowed = 'copy'
+                                          event.dataTransfer.setData('text/plain', `Review document "${document.name}"`)
+                                          event.dataTransfer.setData('application/x-lawvriksh-document', document.name)
+                                          window.setTimeout(() => {
+                                            setDrawerOpen(false)
+                                            setIsComposerDragActive(true)
+                                          }, 80)
+                                        }}
+                                        title="Drag this document into the AI composer"
+                                      >
+                                        <span className={`file-icon ${document.tone}`}><Icon name="file" size={17} /></span>
+                                        <div className="file-drawer-info">
+                                          <span className="file-drawer-title">{document.name}</span>
+                                          <div className="file-drawer-meta">
+                                            <span>{document.size || '1.8 MB'}</span>
+                                            <span className="file-drawer-meta-badge">{document.matter}</span>
+                                          </div>
+                                        </div>
+                                        <div className="file-drawer-actions">
+                                          <button
+                                            className={`btn-file-attach-chip ${isAttached ? 'is-attached' : ''}`}
+                                            onClick={() => {
+                                              if (isAttached) {
+                                                removeFileFromChat(document.name)
+                                              } else {
+                                                attachFileToChat(document.name)
+                                              }
+                                            }}
+                                            title={isAttached ? 'Click to detach from chat' : 'Attach to current conversation'}
+                                            type="button"
+                                          >
+                                            {isAttached ? '✓ In chat' : '+ Attach'}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                  {allFilesLimit < filtered.length && (
+                                    <button
+                                      className="btn-drawer-load-more"
+                                      onClick={() => setAllFilesLimit((c) => c + 15)}
+                                      type="button"
+                                    >
+                                      Load more ({filtered.length - allFilesLimit} remaining)
+                                    </button>
+                                  )}
+                                </>
+                              )
+                            })()}
+                          </div>
+                        </>
+                      )}
+
+                      {/* TAB 3: MATRIX / FOLDERS */}
+                      {activeFileScope === 'matrix' && (
+                        <>
+                          {selectedMatrixMatter === null ? (
+                            <>
+                              <div className="drawer-toolbar">
+                                <label>
+                                  <Icon name="search" size={16} />
+                                  <input
+                                    placeholder="Search matter matrices"
+                                    value={drawerSearch}
+                                    onChange={(e) => setDrawerSearch(e.target.value)}
+                                  />
+                                  {drawerSearch && (
+                                    <button
+                                      aria-label="Clear search"
+                                      onClick={() => setDrawerSearch('')}
+                                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                      type="button"
+                                    >
+                                      <Icon name="close" size={13} />
+                                    </button>
+                                  )}
+                                </label>
+                              </div>
+
+                              <div className="matrix-cards-list">
+                                {availableMatterFolders
+                                  .filter((item) => item.toLowerCase().includes(drawerSearch.toLowerCase()))
+                                  .map((item) => {
+                                    const count = documents.filter((d) => d.matter === item).length
+                                    return (
+                                      <div
+                                        className="matrix-card"
+                                        key={item}
+                                        onClick={() => {
+                                          setSelectedMatrixMatter(item)
+                                          setDrawerSearch('')
+                                        }}
+                                      >
+                                        <div className="matrix-card-icon">
+                                          <Icon name={matterIcons[item] || 'folder'} size={16} />
+                                        </div>
+                                        <div className="matrix-card-body">
+                                          <span className="matrix-card-title">{item}</span>
+                                          <span className="matrix-card-subtitle">Connected files matrix</span>
+                                        </div>
+                                        <span className="matrix-card-count">{count} files</span>
+                                        <Icon name="chevron" size={14} />
+                                      </div>
+                                    )
+                                  })}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="matrix-breadcrumb-bar">
+                                <button
+                                  className="btn-matrix-back"
+                                  onClick={() => setSelectedMatrixMatter(null)}
+                                  type="button"
+                                >
+                                  <Icon name="arrow" size={13} />
+                                  <span>All Matrices</span>
+                                </button>
+                                <span className="matrix-breadcrumb-sep">/</span>
+                                <span className="matrix-breadcrumb-title">{selectedMatrixMatter}</span>
+                              </div>
+
+                              <div className="drawer-toolbar">
+                                <label>
+                                  <Icon name="search" size={16} />
+                                  <input
+                                    placeholder={`Search in ${selectedMatrixMatter}`}
+                                    value={drawerSearch}
+                                    onChange={(e) => setDrawerSearch(e.target.value)}
+                                  />
+                                </label>
+                                <button className="btn-upload-file" onClick={triggerQuickUploadPrompt} type="button">
+                                  <Icon name="plus" size={15} /> Upload
+                                </button>
+                              </div>
+
+                              <div className="file-list-scroll">
+                                {documents
+                                  .filter((doc) => doc.matter === selectedMatrixMatter)
+                                  .filter((doc) => doc.name.toLowerCase().includes(drawerSearch.toLowerCase()))
+                                  .map((document) => {
+                                    const isAttached = currentChatFiles.includes(document.name)
+                                    return (
+                                      <div
+                                        className="file-drawer-card"
+                                        draggable
+                                        key={document.name}
+                                        onDragEnd={() => setIsComposerDragActive(false)}
+                                        onDragStart={(event) => {
+                                          event.dataTransfer.effectAllowed = 'copy'
+                                          event.dataTransfer.setData('text/plain', `Review document "${document.name}"`)
+                                          event.dataTransfer.setData('application/x-lawvriksh-document', document.name)
+                                          window.setTimeout(() => {
+                                            setDrawerOpen(false)
+                                            setIsComposerDragActive(true)
+                                          }, 80)
+                                        }}
+                                        title="Drag this document into the AI composer"
+                                      >
+                                        <span className={`file-icon ${document.tone}`}><Icon name="file" size={17} /></span>
+                                        <div className="file-drawer-info">
+                                          <span className="file-drawer-title">{document.name}</span>
+                                          <div className="file-drawer-meta">
+                                            <span>{document.size || '1.6 MB'}</span>
+                                            <span className="file-drawer-meta-badge">{document.detail}</span>
+                                          </div>
+                                        </div>
+                                        <div className="file-drawer-actions">
+                                          <button
+                                            className={`btn-file-attach-chip ${isAttached ? 'is-attached' : ''}`}
+                                            onClick={() => {
+                                              if (isAttached) {
+                                                removeFileFromChat(document.name)
+                                              } else {
+                                                attachFileToChat(document.name)
+                                              }
+                                            }}
+                                            title={isAttached ? 'In current conversation' : 'Attach to current conversation'}
+                                            type="button"
+                                          >
+                                            {isAttached ? '✓ In chat' : '+ Attach'}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
+
                       <div className="drawer-tip">
-                        <Icon name="spark" size={18} />
-                        <p><strong>Keep it simple</strong><span>Ask from here instead of switching between tools.</span></p>
+                        <Icon name="spark" size={16} />
+                        <p><strong>Drag & Drop</strong><span>Drag any document directly into the legal composer to ground answers.</span></p>
                       </div>
                     </aside>
+                      )
+                    })()}
                     {
                       showTour && (
                         <div className="tour-overlay" onClick={() => setShowTour(false)}>
