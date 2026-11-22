@@ -209,6 +209,7 @@ export default function App() {
   const [floatingDockExpanded, setFloatingDockExpanded] = useState(false)
   const [floatingDiscoveryOpen, setFloatingDiscoveryOpen] = useState(false)
   const [dockMinimized, setDockMinimized] = useState(false)
+  const [dockMatter, setDockMatter] = useState<string | null>(null)
   const [showTour, setShowTour] = useState(false)
   const [tourStep, setTourStep] = useState(1)
   const [sidebarWidth, setSidebarWidth] = useState(280)
@@ -337,6 +338,25 @@ export default function App() {
   const matterDocumentCount = useMemo(
     () => documents.filter((document) => document.matter === matter).length,
     [matter],
+  )
+  const activeFloatingMatter = dockMatter || (matter !== 'No matter — general query' ? matter : null)
+
+  const floatingMatterInitials = useMemo(
+    () =>
+      activeFloatingMatter
+        ? activeFloatingMatter
+            .split(' ')
+            .slice(0, 2)
+            .map((word) => word[0])
+            .join('')
+            .toUpperCase()
+        : '',
+    [activeFloatingMatter],
+  )
+
+  const floatingMatterDocumentCount = useMemo(
+    () => (activeFloatingMatter ? documents.filter((document) => document.matter === activeFloatingMatter).length : 0),
+    [activeFloatingMatter, documents],
   )
   const isLibraryWorkspace = ['Documents', 'Global library'].includes(activeTool)
   const isNotesWorkspace = activeTool === 'Notes'
@@ -620,6 +640,7 @@ export default function App() {
     setSelectedMatrixMatter(null)
     setFileScope('in-chat')
     setMatter('No matter — general query')
+    setDockMatter(null)
     setMatterMenuOpen(false)
     setHeaderMenuOpen(false)
     setPendingMatterTool('')
@@ -672,6 +693,7 @@ export default function App() {
     setActiveChat(chat.id)
     setSubmittedQuery(chat.query || chat.title)
     setMatter(chat.matter)
+    setDockMatter(chat.matter !== 'No matter — general query' ? chat.matter : null)
     setExpandedMatter(chat.matter)
     setChatActions('')
     setHeaderMenuOpen(false)
@@ -712,27 +734,12 @@ export default function App() {
 
   function handleMatterClick(item: string) {
     const isCurrentlyExpanded = expandedMatter === item
-    // Instantly activate this matter so floating tools dock and chat context show immediately
-    setMatter(item)
+    // Show the floating button for this matter immediately on the right side
+    // WITHOUT automatically opening or switching the active chat!
+    setDockMatter(item)
     setDockMinimized(false)
-
-    const mostRecentChat = [...chats]
-      .filter((chat) => chat.matter === item)
-      .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)[0]
-
-    setActiveTool('Ask LawVriksh')
-    setChatActions('')
-    setHeaderMenuOpen(false)
     setIconPickerMatter(null)
     setMatterActions('')
-
-    if (mostRecentChat) {
-      setActiveChat(mostRecentChat.id)
-      setSubmittedQuery(mostRecentChat.query || mostRecentChat.title)
-    } else {
-      setActiveChat('')
-      setSubmittedQuery('')
-    }
 
     if (matterClickTimerRef.current[item]) {
       clearTimeout(matterClickTimerRef.current[item]!)
@@ -1740,7 +1747,7 @@ export default function App() {
       </aside>
 
       <main className="main-panel">
-        <section className={`workspace ${matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && !dockMinimized ? 'has-dock-gutter' : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
+        <section className={`workspace ${Boolean(activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && !dockMinimized) ? 'has-dock-gutter' : ''} ${submittedQuery ? 'has-chat' : ''} ${['Chronology', 'Case mapping', 'Overview', 'All Matters'].includes(activeTool) ? 'artifact-workspace-shell' : ''} ${isLibraryWorkspace ? 'library-workspace-shell' : ''} ${isNotesWorkspace ? 'notes-workspace-shell' : ''} ${activeTool === 'All Matters' ? 'all-matters-workspace-shell' : ''} ${activeTool === 'Overview' ? 'overview-workspace-shell' : ''}`}>
           {activeTool === 'All Matters' ? (
             <div className="all-matters-workspace">
               <div className="all-matters-header">
@@ -3124,7 +3131,7 @@ export default function App() {
       </main>
 
       {
-                      matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
+                      activeFloatingMatter && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
                         <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''} ${drawerOpen ? 'drawer-is-open' : ''}`}>
                           <button
                             className="dock-collapse-trigger"
@@ -3136,14 +3143,14 @@ export default function App() {
                           </button>
 
                           <div className="floating-tools-island">
-                            <div className="floating-matter-tag" title={matter}>
-                              <span>{matterInitials}</span>
+                            <div className="floating-matter-tag" title={activeFloatingMatter}>
+                              <span>{floatingMatterInitials}</span>
                             </div>
 
                             <button
                               className={`floating-dock-btn ${activeTool === 'Overview' ? 'active' : ''}`}
                               data-label="Overview"
-                              onClick={() => openMatterOverview(matter)}
+                              onClick={() => openMatterOverview(activeFloatingMatter)}
                               title="Matter Overview"
                               type="button"
                             >
@@ -3153,18 +3160,18 @@ export default function App() {
                             <button
                               className={`floating-dock-btn ${activeTool === 'Documents' ? 'active' : ''}`}
                               data-label="Documents"
-                              onClick={() => openTool(matterTools[1])}
-                              title={`Documents (${matterDocumentCount})`}
+                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[1]) }}
+                              title={`Documents (${floatingMatterDocumentCount})`}
                               type="button"
                             >
                               <Icon name="folder" size={17} />
-                              <span className="floating-badge">{matterDocumentCount}</span>
+                              <span className="floating-badge">{floatingMatterDocumentCount}</span>
                             </button>
 
                             <button
                               className={`floating-dock-btn ${activeTool === 'Case mapping' ? 'active' : ''}`}
                               data-label="Case mapping"
-                              onClick={() => openTool(matterTools[2])}
+                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[2]) }}
                               title="Case mapping"
                               type="button"
                             >
@@ -3174,7 +3181,7 @@ export default function App() {
                             <button
                               className={`floating-dock-btn ${activeTool === 'Chronology' ? 'active' : ''}`}
                               data-label="Chronology"
-                              onClick={() => openTool(matterTools[3])}
+                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[3]) }}
                               title="Chronology"
                               type="button"
                             >
@@ -3184,7 +3191,7 @@ export default function App() {
                             <button
                               className={`floating-dock-btn ${activeTool === 'Tabular review' ? 'active' : ''}`}
                               data-label="Tabular review"
-                              onClick={() => openTool(matterTools[4])}
+                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[4]) }}
                               title="Tabular review"
                               type="button"
                             >
@@ -3194,7 +3201,7 @@ export default function App() {
                             <button
                               className={`floating-dock-btn ${activeTool === 'Notes' ? 'active' : ''}`}
                               data-label="Notes"
-                              onClick={() => openTool(matterTools[6])}
+                              onClick={() => { setMatter(activeFloatingMatter); openTool(matterTools[6]) }}
                               title="Matter notes"
                               type="button"
                             >

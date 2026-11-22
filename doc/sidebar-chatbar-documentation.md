@@ -52,12 +52,11 @@ The sidebar acts as the primary workspace navigation hub, structured into three 
 ## 3. Matters Interaction Workflow
 
 ### A. Single-Click vs. Double-Click Contract
-- **Single Click (`onClick`) - Instant Matter & Floating Dock Activation**:
-  - Immediately activates the matter (`setMatter(item)`), switching out of non-matter or general query mode.
-  - Instantly reveals the right-hand **Floating Tools Dock** (`.floating-tools-dock-container`) with matter initials tag, document counters, and smart tools without requiring a message to be sent first.
+- **Single Click (`onClick`) - Floating Dock Activation Without Auto-Chat Switching**:
+  - Activates the floating tools dock for that clicked matter (`setDockMatter(item)`), revealing the matter initials tag (`ZP`, `AP`, `AG`, etc.) and tool counters immediately on the right side.
+  - **Zero Auto-Chat Disruption**: Does **NOT** switch or auto-open any conversation. Whatever chat the user is currently working on (including raw/general non-matter query) remains 100% intact and open on screen.
   - Un-minimizes the floating tools dock (`setDockMinimized(false)`).
-  - Automatically loads the most recent conversation of that matter into the central chat workspace.
-  - Smoothly toggles the sidebar sub-chat list accordion (`setExpandedMatter`) after a 240ms debounce window.
+  - Toggles the sidebar matter sub-chat accordion (`setExpandedMatter`) after a 240ms debounce window so users can see the sub-chats and explicitly choose to open one if desired.
 - **Double Click (`onDoubleClick`) - Matter Overview Hub**:
   - Directly deep-links to the **Matter Overview Hub** (`openMatterOverview(item, 'chats')`).
   - Displays the full case analytics, milestones, core documents, and chronology view.
