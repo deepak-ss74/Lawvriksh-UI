@@ -1329,60 +1329,39 @@ export default function App() {
                   </button>
                 </div>
               </div>
-            ) : (
-            <div className="project-list">
-            {[...matters]
-              .sort((a, b) => Number(pinnedMatters.includes(b)) - Number(pinnedMatters.includes(a)))
-              .filter((item) => item.toLowerCase().includes(matterSearch.toLowerCase()))
-              .map((item) => {
-              const matterChats = chats
-                .filter((chat) => chat.matter === item)
-                .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)
-              const displayedMatterChats = matterChats.slice(0, 10)
-              const expanded = expandedMatter === item
-              return (
-                <div className="project-group" key={item}>
-                  <div className={`project-row ${matter === item ? 'selected' : ''}`}>
-                    <button
-                      className="project-main"
-                      onClick={() => {
-                        handleMatterClick(item)
-                      }}
-                      onDoubleClick={() => {
-                        handleMatterDoubleClick(item)
-                      }}
-                      type="button"
-                    >
-                      <span
-                        className="matter-custom-icon"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIconPickerMatter(iconPickerMatter === item ? null : item)
-                          setMatterActions('')
-                        }}
-                        title="Click to change icon"
-                      >
-                        <Icon name={matterIcons[item] || 'folder'} size={16} />
-                      </span>
-                      <div className="title-scroll-container">
-                        <span className={`project-name ${item.length > 15 ? 'is-overflowing' : ''}`}>{item}</span>
-                      </div>
-                      {pinnedMatters.includes(item) && <b className="matter-pin" title="Pinned">•</b>}
-                    </button>
-                    <button className="btn-sidebar-create" style={{ marginTop: '6px' }} onClick={loadSampleData} type="button">
-                      <Icon name="briefcase" size={14} />
-                      <span>Load sample case</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="project-list">
-                    {[...matters]
-                      .sort((a, b) => Number(pinnedMatters.includes(b)) - Number(pinnedMatters.includes(a)))
-                      .filter((item) => item.toLowerCase().includes(matterSearch.toLowerCase()))
-                      .map((item) => {
-                        const matterChats = chats.filter((chat) => chat.matter === item)
-                        const expanded = expandedMatter === item
-                        return (
+
+              {matterSearchOpen && (
+                <label className="sidebar-search">
+                  <Icon name="search" size={14} />
+                  <input autoFocus onChange={(event) => setMatterSearch(event.target.value)} placeholder="Search matters" value={matterSearch} />
+                  {matterSearch && <button aria-label="Clear matter search" onClick={() => setMatterSearch('')}><Icon name="close" size={13} /></button>}
+                </label>
+              )}
+
+              {matters.length === 0 ? (
+                <div className="sidebar-empty-state-card">
+                  <p>No matters created yet. Create your first matter or load a sample case to explore legal tools.</p>
+                  <button className="btn-sidebar-create" onClick={addMatter} type="button">
+                    <Icon name="plus" size={14} />
+                    <span>Create matter</span>
+                  </button>
+                  <button className="btn-sidebar-create" style={{ marginTop: '6px' }} onClick={loadSampleData} type="button">
+                    <Icon name="briefcase" size={14} />
+                    <span>Load sample case</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="project-list">
+                  {[...matters]
+                    .sort((a, b) => Number(pinnedMatters.includes(b)) - Number(pinnedMatters.includes(a)))
+                    .filter((item) => item.toLowerCase().includes(matterSearch.toLowerCase()))
+                    .map((item) => {
+                      const matterChats = chats
+                        .filter((chat) => chat.matter === item)
+                        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)
+                      const displayedMatterChats = matterChats.slice(0, 10)
+                      const expanded = expandedMatter === item
+                      return (
                           <div className="project-group" key={item}>
                             <div className={`project-row ${matter === item ? 'selected' : ''}`}>
                               <button
@@ -1520,6 +1499,7 @@ export default function App() {
                                 <Icon name="close" size={15} /> Archive
                               </button>
                             </div>
+                            
                           )}
                         </div>
                       ))}
@@ -1534,13 +1514,111 @@ export default function App() {
                           <Icon name="chevron-right" size={12} />
                         </button>
                       )}
-                  </div>
-                )
-              )}
-            </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+        </div>
+      )}
+    </div>
 
+    {mattersSectionOpen && recentSectionOpen && matters.length > 0 && (
+      <div
+        className={`sidebar-section-divider ${isVerticalResizing ? 'is-dragging' : ''}`}
+        onDoubleClick={() => setMattersSplitPercent(null)}
+        onMouseDown={startVerticalResizing}
+        title="Drag up/down to adjust section height · Double-click to reset"
+      >
+        <div className="section-divider-handle" />
+      </div>
+    )}
+
+    <div className={`sidebar-section ${!recentSectionOpen ? 'is-collapsed' : ''}`}>
+      <div className="section-label">
+        <button
+          className="section-label-btn"
+          onClick={() => setRecentSectionOpen(!recentSectionOpen)}
+          type="button"
+        >
+          <span className="section-label-text">Recent</span>
+          <span className={`section-chevron ${recentSectionOpen ? 'open' : ''}`}>
+            <Icon name="chevron-right" size={12} />
+          </span>
+        </button>
+        <div className={`section-header-actions ${recentSearchOpen ? 'is-active' : ''}`}>
+          <button
+            aria-label="Filter/Search recent chats"
+            className="section-action-btn"
+            onClick={(e) => {
+              e.stopPropagation()
+              setRecentSearchOpen(!recentSearchOpen)
+              setRecentSearch('')
+            }}
+            title="Filter recent chats"
+            type="button"
+          >
+            <Icon name="tune" size={14} />
+          </button>
+        </div>
+      </div>
+      {recentSearchOpen && (
+        <label className="sidebar-search">
+          <Icon name="search" size={14} />
+          <input autoFocus onChange={(event) => setRecentSearch(event.target.value)} placeholder="Search recent chats" value={recentSearch} />
+          {recentSearch && <button aria-label="Clear recent search" onClick={() => setRecentSearch('')}><Icon name="close" size={13} /></button>}
+        </label>
+      )}
+      {chats.length === 0 ? (
+        <p className="sidebar-empty-hint">No recent conversations. Ask a question below to start chatting.</p>
+      ) : (
+      <div className="chat-list">
+        {[...chats]
+          .sort((a, b) =>
+            Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) ||
+            b.updatedAt - a.updatedAt
+          )
+          .filter((chat) => `${chat.title} ${chat.matter}`.toLowerCase().includes(recentSearch.toLowerCase()))
+          .slice(0, 30)
+          .map((chat) => (
+          <div className={`recent-chat-row ${activeChat === chat.id ? 'selected' : ''}`} key={chat.id}>
+            <button onClick={() => selectChat(chat)}>
+              <div className="title-scroll-container">
+                <span className={`recent-chat-title ${chat.title.length > 18 ? 'is-overflowing' : ''}`}>{chat.title}</span>
+              </div>
+              <small>{chat.matter} · {chat.time}</small>
+            </button>
+            <div className="recent-chat-row-actions">
+              <button
+                aria-label={`Options for ${chat.title}`}
+                className="row-more"
+                onClick={() => setChatActions(chatActions === `recent-${chat.id}` ? '' : `recent-${chat.id}`)}
+                title={`Options for ${chat.title}`}
+                type="button"
+              >
+                <Icon name="more-vertical" size={13} />
+              </button>
+            </div>
+            {chatActions === `recent-${chat.id}` && (
+              <div className="chat-context-menu recent-menu">
+                <button onClick={() => renameChat(chat)}><Icon name="note" size={15} /> Rename</button>
+                <button onClick={() => { setChats((current) => current.map((item) => item.id === chat.id ? { ...item, pinned: !item.pinned, time: 'Now', updatedAt: Date.now() } : item)); setChatActions('') }}>
+                  <Icon name="spark" size={15} /> {chat.pinned ? 'Unpin' : 'Pin'}
+                </button>
+                <button onClick={() => moveChat(chat)}><Icon name="folder" size={15} /> Move to matter</button>
+                <button className="danger" onClick={() => { setChats((current) => current.filter((item) => item.id !== chat.id)); if (activeChat === chat.id) startNewChat(); setChatActions('') }}>
+                  <Icon name="close" size={15} /> Archive
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        ))}
+      </div>
+      )}
+    </div>
+
+  </div>
+)}
         <div
           className={`sidebar-resizer ${isResizing ? 'is-dragging' : ''}`}
           onDoubleClick={() => {
@@ -2938,335 +3016,339 @@ export default function App() {
         </section>
       </main>
 
-      {matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
-        <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''}`}>
-          <button
-            className="dock-collapse-trigger"
-            onClick={() => setDockMinimized(!dockMinimized)}
-            title={dockMinimized ? 'Expand tools dock' : 'Minimize tools dock'}
-            type="button"
-          >
-            <Icon name={dockMinimized ? 'arrow' : 'close'} size={11} />
-          </button>
+      {
+                      matter !== 'No matter — general query' && activeTool !== 'Global library' && activeTool !== 'Playbooks' && activeTool !== 'All Matters' && (
+                        <aside aria-label="Quick matter tools dock" className={`floating-tools-dock-container ${dockMinimized ? 'is-minimized' : ''}`}>
+                          <button
+                            className="dock-collapse-trigger"
+                            onClick={() => setDockMinimized(!dockMinimized)}
+                            title={dockMinimized ? 'Expand tools dock' : 'Minimize tools dock'}
+                            type="button"
+                          >
+                            <Icon name={dockMinimized ? 'arrow' : 'close'} size={11} />
+                          </button>
 
-          <div className="floating-tools-island">
-            <div className="floating-matter-tag" title={matter}>
-              <span>{matterInitials}</span>
-            </div>
+                          <div className="floating-tools-island">
+                            <div className="floating-matter-tag" title={matter}>
+                              <span>{matterInitials}</span>
+                            </div>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Overview' ? 'active' : ''}`}
-              data-label="Overview"
-              onClick={() => openMatterOverview(matter)}
-              title="Matter Overview"
-              type="button"
-            >
-              <Icon name="spark" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Overview' ? 'active' : ''}`}
+                              data-label="Overview"
+                              onClick={() => openMatterOverview(matter)}
+                              title="Matter Overview"
+                              type="button"
+                            >
+                              <Icon name="spark" size={17} />
+                            </button>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Documents' ? 'active' : ''}`}
-              data-label="Documents"
-              onClick={() => openTool(matterTools[1])}
-              title={`Documents (${matterDocumentCount})`}
-              type="button"
-            >
-              <Icon name="folder" size={17} />
-              <span className="floating-badge">{matterDocumentCount}</span>
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Documents' ? 'active' : ''}`}
+                              data-label="Documents"
+                              onClick={() => openTool(matterTools[1])}
+                              title={`Documents (${matterDocumentCount})`}
+                              type="button"
+                            >
+                              <Icon name="folder" size={17} />
+                              <span className="floating-badge">{matterDocumentCount}</span>
+                            </button>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Case mapping' ? 'active' : ''}`}
-              data-label="Case mapping"
-              onClick={() => openTool(matterTools[2])}
-              title="Case mapping"
-              type="button"
-            >
-              <Icon name="map" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Case mapping' ? 'active' : ''}`}
+                              data-label="Case mapping"
+                              onClick={() => openTool(matterTools[2])}
+                              title="Case mapping"
+                              type="button"
+                            >
+                              <Icon name="map" size={17} />
+                            </button>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Chronology' ? 'active' : ''}`}
-              data-label="Chronology"
-              onClick={() => openTool(matterTools[3])}
-              title="Chronology"
-              type="button"
-            >
-              <Icon name="clock" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Chronology' ? 'active' : ''}`}
+                              data-label="Chronology"
+                              onClick={() => openTool(matterTools[3])}
+                              title="Chronology"
+                              type="button"
+                            >
+                              <Icon name="clock" size={17} />
+                            </button>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Tabular review' ? 'active' : ''}`}
-              data-label="Tabular review"
-              onClick={() => openTool(matterTools[4])}
-              title="Tabular review"
-              type="button"
-            >
-              <Icon name="table" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Tabular review' ? 'active' : ''}`}
+                              data-label="Tabular review"
+                              onClick={() => openTool(matterTools[4])}
+                              title="Tabular review"
+                              type="button"
+                            >
+                              <Icon name="table" size={17} />
+                            </button>
 
-            <button
-              className={`floating-dock-btn ${activeTool === 'Notes' ? 'active' : ''}`}
-              data-label="Notes"
-              onClick={() => openTool(matterTools[6])}
-              title="Matter notes"
-              type="button"
-            >
-              <Icon name="note" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn ${activeTool === 'Notes' ? 'active' : ''}`}
+                              data-label="Notes"
+                              onClick={() => openTool(matterTools[6])}
+                              title="Matter notes"
+                              type="button"
+                            >
+                              <Icon name="note" size={17} />
+                            </button>
 
-            <div className="floating-dock-divider" />
+                            <div className="floating-dock-divider" />
 
-            <button
-              className={`floating-dock-btn more-btn ${floatingDockExpanded ? 'active' : ''}`}
-              data-label="More actions"
-              onClick={() => setFloatingDockExpanded(!floatingDockExpanded)}
-              title="More matter tools"
-              type="button"
-            >
-              <Icon name="more" size={17} />
-            </button>
+                            <button
+                              className={`floating-dock-btn more-btn ${floatingDockExpanded ? 'active' : ''}`}
+                              data-label="More actions"
+                              onClick={() => setFloatingDockExpanded(!floatingDockExpanded)}
+                              title="More matter tools"
+                              type="button"
+                            >
+                              <Icon name="more" size={17} />
+                            </button>
 
-            {floatingDockExpanded && (
-              <div className="floating-dock-flyout">
-                <div className="flyout-header">
-                  <strong>More Matter Tools</strong>
-                  <button onClick={() => setFloatingDockExpanded(false)} aria-label="Close flyout"><Icon name="close" size={14} /></button>
-                </div>
-                <div className="flyout-list">
-                  <button onClick={() => { openTool(matterTools[7]); setFloatingDockExpanded(false) }}>
-                    <Icon name="spark" size={16} />
-                    <span>Hearing prep</span>
-                  </button>
-                  <button onClick={() => { openTool(matterTools[5]); setFloatingDockExpanded(false) }}>
-                    <Icon name="file" size={16} />
-                    <span>Drafts</span>
-                  </button>
-                  <button onClick={() => { openTool(matterTools[0]); setFloatingDockExpanded(false) }}>
-                    <Icon name="briefcase" size={16} />
-                    <span>Matter Overview</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </aside>
-      )}
+                            {floatingDockExpanded && (
+                              <div className="floating-dock-flyout">
+                                <div className="flyout-header">
+                                  <strong>More Matter Tools</strong>
+                                  <button onClick={() => setFloatingDockExpanded(false)} aria-label="Close flyout"><Icon name="close" size={14} /></button>
+                                </div>
+                                <div className="flyout-list">
+                                  <button onClick={() => { openTool(matterTools[7]); setFloatingDockExpanded(false) }}>
+                                    <Icon name="spark" size={16} />
+                                    <span>Hearing prep</span>
+                                  </button>
+                                  <button onClick={() => { openTool(matterTools[5]); setFloatingDockExpanded(false) }}>
+                                    <Icon name="file" size={16} />
+                                    <span>Drafts</span>
+                                  </button>
+                                  <button onClick={() => { openTool(matterTools[0]); setFloatingDockExpanded(false) }}>
+                                    <Icon name="briefcase" size={16} />
+                                    <span>Matter Overview</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </aside>
+                      )
+                    }
 
-      {drawerOpen && <button aria-label="Close files" className="drawer-scrim" onClick={() => setDrawerOpen(false)} />}
-      <aside aria-hidden={!drawerOpen} className={`file-drawer ${drawerOpen ? 'is-open' : ''}`}>
-        <div className="drawer-header">
-          <div>
-            <p className="eyebrow">{fileScope === 'global' ? 'Across every matter' : 'Matter context'}</p>
-            <h2>{fileScope === 'global' ? 'Global library' : 'Matter files'}</h2>
-          </div>
-          <button aria-label="Close files" className="icon-button" onClick={() => setDrawerOpen(false)}><Icon name="close" /></button>
-        </div>
-        <div className="library-scope-tabs">
-          <button className={fileScope === 'matter' ? 'active' : ''} onClick={() => setFileScope('matter')}>This matter</button>
-          <button className={fileScope === 'global' ? 'active' : ''} onClick={() => setFileScope('global')}>All files</button>
-        </div>
+                    { drawerOpen && <button aria-label="Close files" className="drawer-scrim" onClick={() => setDrawerOpen(false)} /> }
+                    <aside aria-hidden={!drawerOpen} className={`file-drawer ${drawerOpen ? 'is-open' : ''}`}>
+                      <div className="drawer-header">
+                        <div>
+                          <p className="eyebrow">{fileScope === 'global' ? 'Across every matter' : 'Matter context'}</p>
+                          <h2>{fileScope === 'global' ? 'Global library' : 'Matter files'}</h2>
+                        </div>
+                        <button aria-label="Close files" className="icon-button" onClick={() => setDrawerOpen(false)}><Icon name="close" /></button>
+                      </div>
+                      <div className="library-scope-tabs">
+                        <button className={fileScope === 'matter' ? 'active' : ''} onClick={() => setFileScope('matter')}>This matter</button>
+                        <button className={fileScope === 'global' ? 'active' : ''} onClick={() => setFileScope('global')}>All files</button>
+                      </div>
 
-        {fileScope === 'matter' && (
-          <div className="drawer-scope-tabs">
-            <button
-              className={`drawer-scope-tab ${drawerDocTab === 'case-record' ? 'active' : ''}`}
-              onClick={() => setDrawerDocTab('case-record')}
-              type="button"
-            >
-              Case Records ({documents.filter((d) => d.matter === matter && d.category === 'case-record').length})
-            </button>
-            <button
-              className={`drawer-scope-tab ${drawerDocTab === 'chat-attachment' ? 'active' : ''}`}
-              onClick={() => setDrawerDocTab('chat-attachment')}
-              type="button"
-            >
-              Chat Files ({documents.filter((d) => d.matter === matter && d.category === 'chat-attachment').length})
-            </button>
-          </div>
-        )}
-        {fileScope === 'matter' && <div className="drawer-matter">
-          <span className="matter-avatar">{matterInitials}</span>
-          <div>
-            <strong>{matter}</strong>
-            <small>{documents.filter((document) => document.matter === matter).length} documents connected</small>
-          </div>
-        </div>}
-        <div className="drawer-toolbar">
-          <label>
-            <Icon name="search" size={17} />
-            <input placeholder="Search files" />
-          </label>
-          <button><Icon name="plus" size={17} /> Upload</button>
-        </div>
-        <div className="file-list">
-          {documents
-            .filter((document) => {
-              if (fileScope === 'global') return true
-              if (document.matter !== matter) return false
-              return document.category === drawerDocTab
-            })
-            .map((document) => (
-              <button
-                draggable
-                key={document.name}
-                onDragEnd={() => setIsComposerDragActive(false)}
-                onDragStart={(event) => {
-                  event.dataTransfer.effectAllowed = 'copy'
-                  event.dataTransfer.setData(
-                    'text/plain',
-                    `Review the document “${document.name}” from this matter`,
-                  )
-                  event.dataTransfer.setData(
-                    'application/x-lawvriksh-document',
-                    document.name,
-                  )
-                  window.setTimeout(() => {
-                    setDrawerOpen(false)
-                    setIsComposerDragActive(true)
-                  }, 80)
-                }}
-                title="Drag this document into the AI composer"
-              >
-                <span className={`file-icon ${document.tone}`}><Icon name="file" size={18} /></span>
-                <span>
-                  <strong>{document.name}</strong>
-                  <small>{document.detail}{fileScope === 'global' ? ` · ${document.matter}` : ''}</small>
-                </span>
-                <Icon name="chevron" size={15} />
-              </button>
-            ))}
-        </div>
-        <button className="view-all-button">
-          {fileScope === 'global' ? 'All uploaded and generated files' : 'Open full matter library'} <Icon name="arrow" size={16} />
-        </button>
-        <div className="drawer-tip">
-          <Icon name="spark" size={18} />
-          <p><strong>Keep it simple</strong><span>Ask from here instead of switching between tools.</span></p>
-        </div>
-      </aside>
-      {showTour && (
-        <div className="tour-overlay" onClick={() => setShowTour(false)}>
-          <div className="tour-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="tour-header">
-              <span className="tour-step-badge">Quick Tour · Step {tourStep} of 4</span>
-              <button aria-label="Close tour" className="tour-close-btn" onClick={() => setShowTour(false)}>
-                <Icon name="close" size={16} />
-              </button>
-            </div>
+                      {fileScope === 'matter' && (
+                        <div className="drawer-scope-tabs">
+                          <button
+                            className={`drawer-scope-tab ${drawerDocTab === 'case-record' ? 'active' : ''}`}
+                            onClick={() => setDrawerDocTab('case-record')}
+                            type="button"
+                          >
+                            Case Records ({documents.filter((d) => d.matter === matter && d.category === 'case-record').length})
+                          </button>
+                          <button
+                            className={`drawer-scope-tab ${drawerDocTab === 'chat-attachment' ? 'active' : ''}`}
+                            onClick={() => setDrawerDocTab('chat-attachment')}
+                            type="button"
+                          >
+                            Chat Files ({documents.filter((d) => d.matter === matter && d.category === 'chat-attachment').length})
+                          </button>
+                        </div>
+                      )}
+                      {fileScope === 'matter' && <div className="drawer-matter">
+                        <span className="matter-avatar">{matterInitials}</span>
+                        <div>
+                          <strong>{matter}</strong>
+                          <small>{documents.filter((document) => document.matter === matter).length} documents connected</small>
+                        </div>
+                      </div>}
+                      <div className="drawer-toolbar">
+                        <label>
+                          <Icon name="search" size={17} />
+                          <input placeholder="Search files" />
+                        </label>
+                        <button><Icon name="plus" size={17} /> Upload</button>
+                      </div>
+                      <div className="file-list">
+                        {documents
+                          .filter((document) => {
+                            if (fileScope === 'global') return true
+                            if (document.matter !== matter) return false
+                            return document.category === drawerDocTab
+                          })
+                          .map((document) => (
+                            <button
+                              draggable
+                              key={document.name}
+                              onDragEnd={() => setIsComposerDragActive(false)}
+                              onDragStart={(event) => {
+                                event.dataTransfer.effectAllowed = 'copy'
+                                event.dataTransfer.setData(
+                                  'text/plain',
+                                  `Review the document “${document.name}” from this matter`,
+                                )
+                                event.dataTransfer.setData(
+                                  'application/x-lawvriksh-document',
+                                  document.name,
+                                )
+                                window.setTimeout(() => {
+                                  setDrawerOpen(false)
+                                  setIsComposerDragActive(true)
+                                }, 80)
+                              }}
+                              title="Drag this document into the AI composer"
+                            >
+                              <span className={`file-icon ${document.tone}`}><Icon name="file" size={18} /></span>
+                              <span>
+                                <strong>{document.name}</strong>
+                                <small>{document.detail}{fileScope === 'global' ? ` · ${document.matter}` : ''}</small>
+                              </span>
+                              <Icon name="chevron" size={15} />
+                            </button>
+                          ))}
+                      </div>
+                      <button className="view-all-button">
+                        {fileScope === 'global' ? 'All uploaded and generated files' : 'Open full matter library'} <Icon name="arrow" size={16} />
+                      </button>
+                      <div className="drawer-tip">
+                        <Icon name="spark" size={18} />
+                        <p><strong>Keep it simple</strong><span>Ask from here instead of switching between tools.</span></p>
+                      </div>
+                    </aside>
+                    {
+                      showTour && (
+                        <div className="tour-overlay" onClick={() => setShowTour(false)}>
+                          <div className="tour-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="tour-header">
+                              <span className="tour-step-badge">Quick Tour · Step {tourStep} of 4</span>
+                              <button aria-label="Close tour" className="tour-close-btn" onClick={() => setShowTour(false)}>
+                                <Icon name="close" size={16} />
+                              </button>
+                            </div>
 
-            <div className="tour-body">
-              {tourStep === 1 && (
-                <>
-                  <div className="tour-step-icon-wrap"><Icon name="home" size={24} /></div>
-                  <h3>Welcome to LawVriksh</h3>
-                  <p>
-                    LawVriksh is your AI-native legal workspace. You can use it in two distinct modes: <strong>General Query</strong> for fast ad-hoc research, or <strong>Matters</strong> for deep case-grounded work.
-                  </p>
-                  <div className="tour-tip-box">
-                    <Icon name="spark" size={16} />
-                    <span>General questions stay private and are never mixed with client matter files.</span>
-                  </div>
-                </>
-              )}
+                            <div className="tour-body">
+                              {tourStep === 1 && (
+                                <>
+                                  <div className="tour-step-icon-wrap"><Icon name="home" size={24} /></div>
+                                  <h3>Welcome to LawVriksh</h3>
+                                  <p>
+                                    LawVriksh is your AI-native legal workspace. You can use it in two distinct modes: <strong>General Query</strong> for fast ad-hoc research, or <strong>Matters</strong> for deep case-grounded work.
+                                  </p>
+                                  <div className="tour-tip-box">
+                                    <Icon name="spark" size={16} />
+                                    <span>General questions stay private and are never mixed with client matter files.</span>
+                                  </div>
+                                </>
+                              )}
 
-              {tourStep === 2 && (
-                <>
-                  <div className="tour-step-icon-wrap"><Icon name="briefcase" size={24} /></div>
-                  <h3>Matters Keep Work Grounded</h3>
-                  <p>
-                    Every client or dispute is organized as a <strong>Matter</strong>. When you upload contracts, briefs, or evidence to a matter, all answers cite exact paragraph references.
-                  </p>
-                  <div className="tour-tip-box">
-                    <Icon name="folder" size={16} />
-                    <span>Switch matters anytime from the top center switcher or the left sidebar.</span>
-                  </div>
-                </>
-              )}
+                              {tourStep === 2 && (
+                                <>
+                                  <div className="tour-step-icon-wrap"><Icon name="briefcase" size={24} /></div>
+                                  <h3>Matters Keep Work Grounded</h3>
+                                  <p>
+                                    Every client or dispute is organized as a <strong>Matter</strong>. When you upload contracts, briefs, or evidence to a matter, all answers cite exact paragraph references.
+                                  </p>
+                                  <div className="tour-tip-box">
+                                    <Icon name="folder" size={16} />
+                                    <span>Switch matters anytime from the top center switcher or the left sidebar.</span>
+                                  </div>
+                                </>
+                              )}
 
-              {tourStep === 3 && (
-                <>
-                  <div className="tour-step-icon-wrap"><Icon name="table" size={24} /></div>
-                  <h3>Automated Legal Intelligence Tools</h3>
-                  <p>
-                    Inside any matter, you have specialized tools docked on the right: <strong>Smart Chronology</strong> (auto-extracts dates), <strong>Case Mapping</strong> (maps arguments & claims), and <strong>Tabular Review</strong>.
-                  </p>
-                  <div className="tour-tip-box">
-                    <Icon name="clock" size={16} />
-                    <span>The right tool dock can be minimized anytime using the toggle arrow.</span>
-                  </div>
-                </>
-              )}
+                              {tourStep === 3 && (
+                                <>
+                                  <div className="tour-step-icon-wrap"><Icon name="table" size={24} /></div>
+                                  <h3>Automated Legal Intelligence Tools</h3>
+                                  <p>
+                                    Inside any matter, you have specialized tools docked on the right: <strong>Smart Chronology</strong> (auto-extracts dates), <strong>Case Mapping</strong> (maps arguments & claims), and <strong>Tabular Review</strong>.
+                                  </p>
+                                  <div className="tour-tip-box">
+                                    <Icon name="clock" size={16} />
+                                    <span>The right tool dock can be minimized anytime using the toggle arrow.</span>
+                                  </div>
+                                </>
+                              )}
 
-              {tourStep === 4 && (
-                <>
-                  <div className="tour-step-icon-wrap"><Icon name="library" size={24} /></div>
-                  <h3>Global Library & Firm Playbooks</h3>
-                  <p>
-                    Need to search across every matter at once? Use the <strong>Global Library</strong> on the leftmost utility rail. Use <strong>Playbooks</strong> to standardize dispute arguments across the practice.
-                  </p>
-                  <div className="tour-tip-box">
-                    <Icon name="spark" size={16} />
-                    <span>You're all set! Click below to explore a live sample case or start fresh.</span>
-                  </div>
-                </>
-              )}
-            </div>
+                              {tourStep === 4 && (
+                                <>
+                                  <div className="tour-step-icon-wrap"><Icon name="library" size={24} /></div>
+                                  <h3>Global Library & Firm Playbooks</h3>
+                                  <p>
+                                    Need to search across every matter at once? Use the <strong>Global Library</strong> on the leftmost utility rail. Use <strong>Playbooks</strong> to standardize dispute arguments across the practice.
+                                  </p>
+                                  <div className="tour-tip-box">
+                                    <Icon name="spark" size={16} />
+                                    <span>You're all set! Click below to explore a live sample case or start fresh.</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
 
-            <div className="tour-footer">
-              <div className="tour-dots">
-                {[1, 2, 3, 4].map((step) => (
-                  <span
-                    className={`tour-dot ${tourStep === step ? 'active' : ''}`}
-                    key={step}
-                    onClick={() => setTourStep(step)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                ))}
-              </div>
+                            <div className="tour-footer">
+                              <div className="tour-dots">
+                                {[1, 2, 3, 4].map((step) => (
+                                  <span
+                                    className={`tour-dot ${tourStep === step ? 'active' : ''}`}
+                                    key={step}
+                                    onClick={() => setTourStep(step)}
+                                    style={{ cursor: 'pointer' }}
+                                  />
+                                ))}
+                              </div>
 
-              <div className="tour-actions">
-                <button
-                  className="btn-tour-secondary"
-                  onClick={() => setShowTour(false)}
-                  type="button"
-                >
-                  Skip
-                </button>
-                {tourStep > 1 && (
-                  <button
-                    className="btn-tour-secondary"
-                    onClick={() => setTourStep(tourStep - 1)}
-                    type="button"
-                  >
-                    Back
-                  </button>
-                )}
-                {tourStep < 4 ? (
-                  <button
-                    className="btn-tour-primary"
-                    onClick={() => setTourStep(tourStep + 1)}
-                    type="button"
-                  >
-                    Next <Icon name="arrow" size={14} />
-                  </button>
-                ) : (
-                  <button
-                    className="btn-tour-primary"
-                    onClick={() => {
-                      loadSampleData()
-                      setShowTour(false)
-                    }}
-                    type="button"
-                  >
-                    Explore Sample Case <Icon name="arrow" size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                              <div className="tour-actions">
+                                <button
+                                  className="btn-tour-secondary"
+                                  onClick={() => setShowTour(false)}
+                                  type="button"
+                                >
+                                  Skip
+                                </button>
+                                {tourStep > 1 && (
+                                  <button
+                                    className="btn-tour-secondary"
+                                    onClick={() => setTourStep(tourStep - 1)}
+                                    type="button"
+                                  >
+                                    Back
+                                  </button>
+                                )}
+                                {tourStep < 4 ? (
+                                  <button
+                                    className="btn-tour-primary"
+                                    onClick={() => setTourStep(tourStep + 1)}
+                                    type="button"
+                                  >
+                                    Next <Icon name="arrow" size={14} />
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="btn-tour-primary"
+                                    onClick={() => {
+                                      loadSampleData()
+                                      setShowTour(false)
+                                    }}
+                                    type="button"
+                                  >
+                                    Explore Sample Case <Icon name="arrow" size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
     </div>
-  )
+              )
 }
