@@ -1,5 +1,5 @@
-import LawVrikshApp from './LawVrikshApp'
+import LawVrikshAppV4 from './LawVrikshAppV4'
 
 export default function HomePage() {
-  return <LawVrikshApp />
+  return <LawVrikshAppV4 />
 }

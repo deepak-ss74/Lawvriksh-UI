@@ -1003,23 +1003,6 @@ export default function App() {
         </div>
 
         <div className="app-header-actions">
-          <div className="version-nav-pill">
-            <span className="version-pill-label">UI:</span>
-            <a href="/" className="ver-link" title="v1: Header sub-nav tabs">v1</a>
-            <a href="/v2" className="ver-link" title="v2: 2-Tier sticky sub-nav">v2</a>
-            <a href="/v3" className="ver-link" title="v3: Right dockable panel">v3</a>
-            <a href="/v4" className="ver-link active" title="v4: Floating action dock">v4</a>
-            <a href="/v5" className="ver-link" title="v5: Zero-state onboarding & integrated dock">v5</a>
-          </div>
-          <button
-            type="button"
-            className="header-tour-btn"
-            onClick={() => { setShowTour(true); setTourStep(1) }}
-            title="Take a quick 2-minute tour of LawVriksh"
-          >
-            <Icon name="spark" size={13} />
-            <span>Tour</span>
-          </button>
           <button
             aria-label={matter === 'No matter — general query' ? 'View all files' : `View files for ${matter}`}
             className="files-button"
